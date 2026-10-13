@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#12a594"/>
+      <stop offset="100%" stop-color="#0b6b5c"/>
+    </linearGradient>
+    <linearGradient id="sheet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d7f2ec"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded tile -->
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="url(#bg)"/>
+
+  <!-- stacked map sheets: bottom two are ghosted, top one solid.
+       Bold, widely spaced shapes so the mark survives 16px rendering. -->
+  <g opacity="0.34">
+    <path d="M64 92 L20 71 L64 50 L108 71 Z" fill="#ffffff"/>
+  </g>
+  <g opacity="0.62">
+    <path d="M64 74 L20 53 L64 32 L108 53 Z" fill="#ffffff"/>
+  </g>
+  <path d="M64 56 L20 35 L64 14 L108 35 Z" fill="url(#sheet)"/>
+
+  <!-- connection graph: one hub linked to three peers = the MCP bridge -->
+  <g stroke="#ffcf5c" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M92 96 L68 108"/>
+    <path d="M92 96 L92 118"/>
+    <path d="M92 96 L114 106"/>
+  </g>
+  <g fill="#ffcf5c">
+    <circle cx="92" cy="94" r="13"/>
+    <circle cx="66" cy="109" r="8"/>
+    <circle cx="92" cy="119" r="8"/>
+    <circle cx="116" cy="107" r="8"/>
+  </g>
+  <circle cx="92" cy="94" r="5" fill="#0b6b5c"/>
+</svg>

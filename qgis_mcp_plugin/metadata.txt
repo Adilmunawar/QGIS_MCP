@@ -1,0 +1,17 @@
+[general]
+name=QGIS MCP
+description=Permission-gated socket bridge that lets an MCP client drive QGIS
+version=4.0.0
+qgisMinimumVersion=3.22
+qgisMaximumVersion=4.99
+supportsQt6=True
+author=jjsantos
+email=tu_correo@example.com
+category=Plugins
+icon=icon.png
+homepage=https://github.com/jjsantos01/qgis_mcp
+tracker=https://github.com/jjsantos01/qgis_mcp/issues
+repository=https://github.com/jjsantos01/qgis_mcp
+
+[about]
+about=Starts an MCP socket server inside QGIS so commands can be executed from an LLM client. Patched locally for QGIS 4 / PyQt6.
