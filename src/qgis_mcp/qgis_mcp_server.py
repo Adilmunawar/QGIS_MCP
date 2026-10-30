@@ -25,7 +25,7 @@ import os
 import socket
 import threading
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Dict, Optional
+from typing import Any, AsyncIterator, Dict, List, Optional
 
 from mcp.server.fastmcp import Context, FastMCP, Image
 
@@ -40,7 +40,7 @@ DEFAULT_PORT = int(os.environ.get("QGIS_MCP_PORT", "9876"))
 # Longer than the plugin's default 60s approval window, so a command parked
 # for human approval can actually be answered instead of the client giving up
 # first and leaving an orphaned request in the queue.
-DEFAULT_TIMEOUT = float(os.environ.get("QGIS_MCP_TIMEOUT", "120.0"))
+DEFAULT_TIMEOUT = float(os.environ.get("QGIS_MCP_TIMEOUT", "300.0"))
 DEFAULT_TOKEN = os.environ.get("QGIS_MCP_TOKEN", "")
 CLIENT_NAME = os.environ.get("QGIS_MCP_CLIENT_NAME", "claude-mcp")
 
@@ -194,6 +194,9 @@ class QgisClient:
             try:
                 chunk = self._sock.recv(65536)
             except socket.timeout as exc:
+                # A reply may still arrive later; it must not be mistaken for
+                # the answer to the next command, so the socket is discarded.
+                self.disconnect()
                 raise QgisTimeoutError(
                     f"No answer within {self.timeout}s. If the QGIS MCP panel "
                     "is set to Standard or Full, this command may be waiting "
@@ -222,12 +225,31 @@ def get_qgis_connection() -> QgisClient:
         return _client
 
 
+class QgisToolError(RuntimeError):
+    """A command the plugin refused or that failed inside QGIS.
+
+    Raised so the MCP client marks the result as an error, which the model
+    notices without having to parse JSON for a status field.
+    """
+
+
 def _call(command: str, params: Optional[Dict[str, Any]] = None) -> str:
     """Run one command and render the response as JSON text for the model."""
     try:
         result = get_qgis_connection().send_command(command, params)
     except QgisConnectionError as exc:
-        return json.dumps({"status": "error", "message": str(exc)}, indent=2)
+        raise QgisToolError(str(exc)) from exc
+    if result.get("status") == "error":
+        # The SDK already prefixes "Error executing tool <name>:".
+        bits = [str(result.get("message", "unknown error"))]
+        if result.get("error_type") in ("PermissionDenied", "ApprovalDenied",
+                                        "Unauthorized", "UnknownCommand"):
+            bits.append(f"({result['error_type']})")
+        if result.get("profile"):
+            bits.append(f"profile={result['profile']} category={result.get('category')}")
+        if result.get("available"):
+            bits.append(f"available={result['available']}")
+        raise QgisToolError(". ".join(bits))
     return json.dumps(result, indent=2)
 
 
@@ -824,6 +846,352 @@ def get_audit_log(ctx: Context, limit: int = 50, command: str = None,
     if command:
         params["command"] = command
     return _call("get_audit_log", params)
+
+
+# ---------------------------------------------------------------------
+# live data: discovery and places
+# ---------------------------------------------------------------------
+AOI_DOC = """
+``aoi`` accepts any of:
+    {"place": "Multan"}  |  {"place": "Multan", "radius_km": 15}
+    {"bbox": [west, south, east, north]}  (WGS84 degrees)
+    {"layer_id": "..."}  |  {"layer_id": "...", "selected": true}
+    {"canvas": true}  |  {"point": [lon, lat], "radius_km": 10}
+    {"wkt": "POLYGON((...))", "crs": "EPSG:4326"}
+Areas above 5x5 degrees are refused; narrow to the region you need.
+"""
+
+
+@mcp.tool()
+def list_data_sources(ctx: Context, category: Optional[str] = None) -> str:
+    """List live data sources the bridge can pull from, grouped by category.
+
+    Categories: imagery, weather, elevation, vector, hazards, basemaps,
+    sensors. Each entry says whether it needs a key and what licence applies.
+    """
+    return _call("list_data_sources", {"category": category} if category else {})
+
+
+@mcp.tool()
+def resolve_aoi(ctx: Context, aoi: dict) -> str:
+    """Preview how an area-of-interest will be interpreted before fetching.
+    """ + AOI_DOC
+    return _call("resolve_aoi", {"aoi": aoi})
+
+
+@mcp.tool()
+def geocode(ctx: Context, query: str, limit: int = 5,
+            country_codes: Optional[str] = None) -> str:
+    """Find places by name. Returns lat/lon, bounding box and type for each.
+
+    ``country_codes`` is a comma-separated ISO list, e.g. "pk,in".
+    """
+    params: Dict[str, Any] = {"query": query, "limit": limit}
+    if country_codes:
+        params["country_codes"] = country_codes
+    return _call("geocode", params)
+
+
+@mcp.tool()
+def reverse_geocode(ctx: Context, lat: float, lon: float, zoom: int = 14) -> str:
+    """Describe the place at a coordinate. zoom 10 = city, 14 = suburb, 18 = building."""
+    return _call("reverse_geocode", {"lat": lat, "lon": lon, "zoom": zoom})
+
+
+@mcp.tool()
+def add_place_marker(ctx: Context, query: str, name: Optional[str] = None) -> str:
+    """Geocode a place and add it as a layer (its boundary polygon when known)."""
+    params: Dict[str, Any] = {"query": query}
+    if name:
+        params["name"] = name
+    return _call("add_place_marker", params)
+
+
+# ---------------------------------------------------------------------
+# live data: satellite imagery and indices
+# ---------------------------------------------------------------------
+@mcp.tool()
+def search_imagery(ctx: Context, aoi: dict, collection: str = "sentinel-2-l2a",
+                   start_date: Optional[str] = None,
+                   end_date: Optional[str] = None,
+                   max_cloud: float = 20, limit: int = 10) -> str:
+    """Find satellite scenes over an area, least cloudy first.
+
+    Collections: sentinel-2-l2a (10 m optical, default), sentinel-2-c1-l2a,
+    landsat-c2-l2 (30 m, includes thermal), sentinel-1-grd (radar, sees
+    through cloud), cop-dem-glo-30. Dates are YYYY-MM-DD; default is the
+    last 60 days.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"aoi": aoi, "collection": collection,
+                              "max_cloud": max_cloud, "limit": limit}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    return _call("search_imagery", params)
+
+
+@mcp.tool()
+def add_imagery(ctx: Context, item_id: str, collection: str = "sentinel-2-l2a",
+                assets: Optional[List[str]] = None,
+                name: Optional[str] = None) -> str:
+    """Stream a scene's bands into the project as cloud-optimised GeoTIFF layers.
+
+    Default asset is the true-colour "visual" image. Other Sentinel-2 assets:
+    red, green, blue, nir, swir16, swir22, scl (cloud classes). Nothing is
+    downloaded until rendered. Takes 10-20 s for the first open.
+    """
+    params: Dict[str, Any] = {"item_id": item_id, "collection": collection}
+    if assets:
+        params["assets"] = assets
+    if name:
+        params["name"] = name
+    return _call("add_imagery", params)
+
+
+@mcp.tool()
+def compute_spectral_index(ctx: Context, aoi: dict, index: str = "NDVI",
+                           item_id: Optional[str] = None,
+                           collection: str = "sentinel-2-l2a",
+                           expression: Optional[str] = None,
+                           mask_clouds: bool = True,
+                           start_date: Optional[str] = None,
+                           end_date: Optional[str] = None,
+                           max_cloud: float = 20,
+                           breaks: Optional[List[float]] = None,
+                           add_to_project: bool = True) -> str:
+    """Compute a spectral index over an area and add it as a styled raster.
+
+    Indices: NDVI, EVI, SAVI (vegetation), NDWI, MNDWI (water), NDMI (crop
+    water stress), NDBI (built-up), NBR (burn), BSI (bare soil), or a custom
+    ``expression`` over band names, e.g. "(nir - red) / (nir + red + 0.16)".
+    Omit item_id to use the least cloudy scene of the last 90 days (not
+    necessarily the newest; pass start_date/end_date to pin a period).
+    ``breaks`` such as [0.2, 0.4, 0.6] returns the share of pixels per class.
+    Reads only the AOI window; expect 10-60 s depending on area.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"aoi": aoi, "index": index, "collection": collection,
+                              "mask_clouds": mask_clouds, "max_cloud": max_cloud,
+                              "add_to_project": add_to_project}
+    for key, value in (("item_id", item_id), ("expression", expression),
+                       ("start_date", start_date), ("end_date", end_date),
+                       ("breaks", breaks)):
+        if value is not None:
+            params[key] = value
+    return _call("compute_spectral_index", params)
+
+
+@mcp.tool()
+def get_index_time_series(ctx: Context, aoi: dict, index: str = "NDVI",
+                          start_date: Optional[str] = None,
+                          end_date: Optional[str] = None,
+                          collection: str = "sentinel-2-l2a",
+                          max_cloud: float = 30, max_scenes: int = 8) -> str:
+    """Mean index per scene across a date range - crop growth, drought, flooding.
+
+    Default range is the last 180 days. Each scene costs several seconds and
+    the call stops at a time budget, reporting ``truncated`` when it does, so
+    keep the AOI small (a few km) and max_scenes modest. Returns the change
+    from first to last scene.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"aoi": aoi, "index": index, "collection": collection,
+                              "max_cloud": max_cloud, "max_scenes": max_scenes}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    return _call("get_index_time_series", params)
+
+
+# ---------------------------------------------------------------------
+# live data: elevation
+# ---------------------------------------------------------------------
+@mcp.tool()
+def add_dem(ctx: Context, aoi: dict, name: Optional[str] = None) -> str:
+    """Stream Copernicus DEM 30 m elevation covering an area, as one layer.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"aoi": aoi}
+    if name:
+        params["name"] = name
+    return _call("add_dem", params)
+
+
+@mcp.tool()
+def derive_terrain(ctx: Context, layer_id: str, product: str = "slope",
+                   add_to_project: bool = True) -> str:
+    """Derive slope, aspect, hillshade, roughness, TRI or TPI from a DEM layer.
+
+    Geographic DEMs are projected to their UTM zone first so slopes are true.
+    """
+    return _call("derive_terrain", {"layer_id": layer_id, "product": product,
+                                    "add_to_project": add_to_project})
+
+
+# ---------------------------------------------------------------------
+# live data: weather and climate
+# ---------------------------------------------------------------------
+@mcp.tool()
+def get_weather(ctx: Context, aoi: Optional[dict] = None,
+                lat: Optional[float] = None, lon: Optional[float] = None,
+                kind: str = "current", days: int = 7,
+                variables: Optional[List[str]] = None) -> str:
+    """Current weather, a forecast, or air quality for a point or area centre.
+
+    kind: current (temperature, humidity, rain, wind, cloud, pressure),
+    forecast (daily max/min, rain, wind, ET0, radiation for ``days`` days),
+    air_quality (PM2.5, PM10, NO2, O3, dust, US AQI). Pass lat/lon or an aoi.
+    ``variables`` are Open-Meteo names for the chosen kind.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"kind": kind, "days": days}
+    if aoi is not None:
+        params["aoi"] = aoi
+    if lat is not None and lon is not None:
+        params["lat"], params["lon"] = lat, lon
+    if variables:
+        params["variables"] = variables
+    return _call("get_weather", params)
+
+
+@mcp.tool()
+def get_weather_history(ctx: Context, start_date: str, end_date: str,
+                        aoi: Optional[dict] = None, lat: Optional[float] = None,
+                        lon: Optional[float] = None,
+                        daily: Optional[List[str]] = None,
+                        include_rows: bool = True) -> str:
+    """Historical daily weather (1940 to now) with per-variable summaries.
+
+    Default variables: temperature max/min, precipitation sum, wind max,
+    reference evapotranspiration, shortwave radiation. Dates YYYY-MM-DD.
+    Rows are capped at 400; set include_rows=false for the summary alone.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"start_date": start_date, "end_date": end_date,
+                              "include_rows": include_rows}
+    if aoi is not None:
+        params["aoi"] = aoi
+    if lat is not None and lon is not None:
+        params["lat"], params["lon"] = lat, lon
+    if daily:
+        params["daily"] = daily
+    return _call("get_weather_history", params)
+
+
+@mcp.tool()
+def get_climate_series(ctx: Context, start_date: str, end_date: str,
+                       aoi: Optional[dict] = None, lat: Optional[float] = None,
+                       lon: Optional[float] = None,
+                       parameters: Optional[List[str]] = None,
+                       include_rows: bool = True) -> str:
+    """NASA POWER daily agro-climatology since 1981: T2M, PRECTOTCORR, RH2M,
+    WS2M, ALLSKY_SFC_SW_DWN and more. Built for crop and irrigation work.
+    Rows are capped at 400; set include_rows=false for the summary alone.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"start_date": start_date, "end_date": end_date,
+                              "include_rows": include_rows}
+    if aoi is not None:
+        params["aoi"] = aoi
+    if lat is not None and lon is not None:
+        params["lat"], params["lon"] = lat, lon
+    if parameters:
+        params["parameters"] = parameters
+    return _call("get_climate_series", params)
+
+
+@mcp.tool()
+def attach_weather_to_layer(ctx: Context, layer_id: str, kind: str = "current",
+                            date: Optional[str] = None,
+                            variables: Optional[List[str]] = None,
+                            prefix: str = "wx_") -> str:
+    """Add weather fields to every feature of a layer, sampled at its centroid.
+
+    kind=current for live conditions, kind=history with a date for that day.
+    Up to 100 features per call; the response says if the layer was larger.
+    """
+    params: Dict[str, Any] = {"layer_id": layer_id, "kind": kind, "prefix": prefix}
+    if date:
+        params["date"] = date
+    if variables:
+        params["variables"] = variables
+    return _call("attach_weather_to_layer", params)
+
+
+# ---------------------------------------------------------------------
+# live data: basemaps, OpenStreetMap, hazards
+# ---------------------------------------------------------------------
+@mcp.tool()
+def list_basemaps(ctx: Context) -> str:
+    """List basemaps: OSM, Esri imagery, topo, CARTO, and NASA GIBS daily
+    satellite layers (true colour, NDVI, fires, snow, night lights) by date."""
+    return _call("list_basemaps")
+
+
+@mcp.tool()
+def add_basemap(ctx: Context, basemap: str = "osm", date: Optional[str] = None,
+                name: Optional[str] = None, opacity: float = 1.0) -> str:
+    """Add a tiled basemap underneath the other layers.
+
+    GIBS ids (e.g. viirs-snpp-truecolor, modis-fires) take a date YYYY-MM-DD.
+    """
+    params: Dict[str, Any] = {"basemap": basemap, "opacity": opacity}
+    if date:
+        params["date"] = date
+    if name:
+        params["name"] = name
+    return _call("add_basemap", params)
+
+
+@mcp.tool()
+def fetch_osm_features(ctx: Context, aoi: dict, tags: dict,
+                       geometry: str = "center", name: Optional[str] = None,
+                       limit: int = 5000) -> str:
+    """Fetch OpenStreetMap features by tag inside an area, as a layer.
+
+    tags examples: {"amenity": "hospital"}, {"highway": ["primary",
+    "secondary"]}, {"building": "*"}, {"landuse": "farmland"}.
+    geometry=center gives one point per feature (fast); geometry=full gives
+    real lines and polygons, split into one layer per geometry type.
+    Overpass is a shared public service: expect 5-60 s, and narrow the area
+    if it reports a timeout.
+    """ + AOI_DOC
+    params: Dict[str, Any] = {"aoi": aoi, "tags": tags, "geometry": geometry,
+                              "limit": limit}
+    if name:
+        params["name"] = name
+    return _call("fetch_osm_features", params)
+
+
+@mcp.tool()
+def fetch_earthquakes(ctx: Context, period: str = "day",
+                      min_magnitude: Optional[float] = None,
+                      aoi: Optional[dict] = None,
+                      add_to_project: bool = True) -> str:
+    """USGS earthquakes for the last hour, day, week or month, optionally
+    within an area and above a magnitude. Adds a point layer."""
+    params: Dict[str, Any] = {"period": period, "add_to_project": add_to_project}
+    if min_magnitude is not None:
+        params["min_magnitude"] = min_magnitude
+    if aoi is not None:
+        params["aoi"] = aoi
+    return _call("fetch_earthquakes", params)
+
+
+@mcp.tool()
+def fetch_active_fires(ctx: Context, aoi: dict, days: int = 1,
+                       source: str = "VIIRS_SNPP_NRT") -> str:
+    """NASA FIRMS active fire detections for the last 1-10 days in an area.
+
+    Needs a free FIRMS map key stored with set_data_source_key("nasa-firms").
+    """ + AOI_DOC
+    return _call("fetch_active_fires", {"aoi": aoi, "days": days, "source": source})
+
+
+@mcp.tool()
+def set_data_source_key(ctx: Context, source_id: str, key: str) -> str:
+    """Store an API key for a data source that needs one (e.g. nasa-firms).
+
+    The key is saved in QGIS settings, redacted from the audit log, and
+    never returned. Prefer pasting it in the QGIS MCP panel when possible.
+    """
+    return _call("set_data_source_key", {"source_id": source_id, "key": key})
 
 
 # ---------------------------------------------------------------------

@@ -839,6 +839,16 @@ class QgisMCPDockWidget(QDockWidget):
             here = os.path.dirname(here)
             if here and os.path.isdir(here):
                 roots.append(here)
+        env_hint = os.environ.get("QGIS_MCP_REPO")
+        if env_hint and os.path.isdir(env_hint):
+            roots.insert(0, env_hint)
+        # Checkouts often live on a second drive; scan each drive's top
+        # levels last, still within the same budget.
+        if os.name == "nt":
+            for letter in "CDEFGH":
+                drive = f"{letter}:\\"
+                if os.path.isdir(drive) and drive.lower() != home[:3].lower():
+                    roots.append(drive)
 
         budget = 3000
         seen = set()

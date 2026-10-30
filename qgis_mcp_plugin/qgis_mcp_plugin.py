@@ -20,6 +20,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton
 
 from .audit import AuditLog
+from .explorer import ExplorerDock
 from .mcp_server import QgisMCPServer
 from .panel import (
     SETTINGS_APPROVAL_TIMEOUT, SETTINGS_AUDIT, SETTINGS_AUTOSTART,
@@ -49,6 +50,8 @@ class QgisMCPPlugin:
     def __init__(self, iface):
         self.iface = iface
         self.dock = None
+        self.explorer = None
+        self.explorer_action = None
         self.server = None
         self.action = None
         self.tool_button = None
@@ -81,6 +84,16 @@ class QgisMCPPlugin:
         self.iface.addToolBarWidget(self.tool_button)
         self.iface.addPluginToMenu("QGIS MCP", self.action)
 
+        self.explorer_action = QAction(icon, "Data Explorer", self.iface.mainWindow())
+        self.explorer_action.setCheckable(True)
+        self.explorer_action.setToolTip(
+            "Data Explorer - pull satellite, weather, elevation and OpenStreetMap "
+            "data for an area with clicks")
+        self.explorer_action.triggered.connect(self.toggle_explorer)
+        menu.addSeparator()
+        menu.addAction(self.explorer_action)
+        self.iface.addPluginToMenu("QGIS MCP", self.explorer_action)
+
         self._install_status_widget()
         self._refresh_status_widget()
 
@@ -95,6 +108,14 @@ class QgisMCPPlugin:
             self.iface.removeDockWidget(self.dock)
             self.dock.deleteLater()
             self.dock = None
+        if self.explorer:
+            self.explorer.cleanup()
+            self.iface.removeDockWidget(self.explorer)
+            self.explorer.deleteLater()
+            self.explorer = None
+        if self.explorer_action:
+            self.iface.removePluginMenu("QGIS MCP", self.explorer_action)
+            self.explorer_action = None
         if self.status_label is not None:
             self.iface.statusBarIface().removeWidget(self.status_label)
             self.status_label.deleteLater()
@@ -145,6 +166,27 @@ class QgisMCPPlugin:
             if self.server is not None:
                 self.dock.attach(self.server)
         return self.dock
+
+    def _ensure_explorer(self):
+        if self.explorer is None:
+            self.explorer = ExplorerDock(self.iface, icon_path=ICON_PATH)
+            self.iface.addDockWidget(
+                Qt.DockWidgetArea.LeftDockWidgetArea, self.explorer)
+            self.explorer.visibilityChanged.connect(self._explorer_visibility)
+        return self.explorer
+
+    def _explorer_visibility(self, visible):
+        if self.explorer_action is not None \
+                and self.explorer_action.isChecked() != visible:
+            self.explorer_action.setChecked(visible)
+
+    def toggle_explorer(self, checked):
+        if checked:
+            dock = self._ensure_explorer()
+            dock.show()
+            dock.raise_()
+        elif self.explorer:
+            self.explorer.hide()
 
     def toggle_dock(self, checked):
         if checked:

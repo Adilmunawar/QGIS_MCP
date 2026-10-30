@@ -76,6 +76,28 @@ COMMAND_HELP = {
     "render_map_base64": "Render the map and return it inline as PNG.",
     "list_layouts": "List print layouts in the project.",
     "export_layout": "Export a layout to PDF or image.",
+    # live data
+    "list_data_sources": "Catalogue of live data sources by category.",
+    "resolve_aoi": "Preview how an area-of-interest spec is interpreted.",
+    "set_data_source_key": "Store an API key for a source that needs one.",
+    "geocode": "Place name to coordinates (Nominatim).",
+    "reverse_geocode": "Coordinates to a place (Nominatim).",
+    "add_place_marker": "Add a geocoded place as a layer.",
+    "search_imagery": "Find Sentinel-2, Landsat or Sentinel-1 scenes over an area.",
+    "add_imagery": "Stream a satellite scene's bands into the project.",
+    "compute_spectral_index": "NDVI, NDWI, NBR... over an area from a scene.",
+    "get_index_time_series": "Mean index per scene across a date range.",
+    "add_dem": "Stream Copernicus DEM 30 m for an area.",
+    "derive_terrain": "Slope, aspect, hillshade from a DEM.",
+    "get_weather": "Current weather, forecast or air quality (Open-Meteo).",
+    "get_weather_history": "Historical daily/hourly weather since 1940.",
+    "get_climate_series": "NASA POWER daily agro-climatology.",
+    "attach_weather_to_layer": "Add weather fields to every feature.",
+    "list_basemaps": "Available basemaps including NASA GIBS daily layers.",
+    "add_basemap": "Add an XYZ basemap, GIBS layers by date.",
+    "fetch_osm_features": "OpenStreetMap features by tag inside an area.",
+    "fetch_earthquakes": "USGS earthquakes for the last hour to month.",
+    "fetch_active_fires": "NASA FIRMS active fire detections (needs key).",
 }
 
 

@@ -38,6 +38,7 @@ from ._server_core import (
     DEFAULT_MAX_SCAN, PLUGIN_VERSION, PROTOCOL_VERSION, ServerCore,
 )
 from .data_commands import DataCommandsMixin
+from .live_commands import LiveDataMixin
 
 _EXPORT_SUCCESS = getattr(
     getattr(QgsLayoutExporter, "ExportResult", QgsLayoutExporter), "Success", 0
@@ -55,7 +56,7 @@ GEOMETRY_KEYWORDS = {
 }
 
 
-class QgisMCPServer(DataCommandsMixin, ServerCore):
+class QgisMCPServer(LiveDataMixin, DataCommandsMixin, ServerCore):
     """The full command surface, mounted on the gated transport."""
 
     def _handlers(self):
@@ -130,6 +131,31 @@ class QgisMCPServer(DataCommandsMixin, ServerCore):
             # raster
             "get_raster_statistics": self.get_raster_statistics,
             "sample_raster_values": self.sample_raster_values,
+            # live data: discovery and places
+            "list_data_sources": self.list_data_sources,
+            "resolve_aoi": self.resolve_aoi,
+            "set_data_source_key": self.set_data_source_key,
+            "geocode": self.geocode,
+            "reverse_geocode": self.reverse_geocode,
+            "add_place_marker": self.add_place_marker,
+            # live data: imagery and elevation
+            "search_imagery": self.search_imagery,
+            "add_imagery": self.add_imagery,
+            "compute_spectral_index": self.compute_spectral_index,
+            "get_index_time_series": self.get_index_time_series,
+            "add_dem": self.add_dem,
+            "derive_terrain": self.derive_terrain,
+            # live data: weather and climate
+            "get_weather": self.get_weather,
+            "get_weather_history": self.get_weather_history,
+            "get_climate_series": self.get_climate_series,
+            "attach_weather_to_layer": self.attach_weather_to_layer,
+            # live data: basemaps, OSM, hazards
+            "list_basemaps": self.list_basemaps,
+            "add_basemap": self.add_basemap,
+            "fetch_osm_features": self.fetch_osm_features,
+            "fetch_earthquakes": self.fetch_earthquakes,
+            "fetch_active_fires": self.fetch_active_fires,
         }
 
     # ------------------------------------------------------------------
@@ -306,6 +332,8 @@ class QgisMCPServer(DataCommandsMixin, ServerCore):
         project = QgsProject.instance()
         project.clear()
         project.setFileName(path)
+        if not project.crs().isValid():
+            project.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
         if self.iface is not None:
             self.iface.mapCanvas().refresh()
         if not project.write():
@@ -898,9 +926,26 @@ class QgisMCPServer(DataCommandsMixin, ServerCore):
         elif self.iface is not None:
             rect = self.iface.mapCanvas().extent()
         else:
+            # Global tiled basemaps would make this the whole world; frame
+            # the data layers instead and let the basemap fill behind them.
             rect = QgsRectangle()
+            transform_context = project.transformContext()
             for layer in layers:
-                rect.combineExtentWith(layer.extent())
+                if layer.providerType() in ("wms", "xyz", "wmts"):
+                    continue
+                extent = layer.extent()
+                if extent.isNull() or extent.isEmpty():
+                    continue
+                if layer.crs().isValid() and project.crs().isValid() \
+                        and layer.crs() != project.crs():
+                    from qgis.core import QgsCoordinateTransform
+                    extent = QgsCoordinateTransform(
+                        layer.crs(), project.crs(), transform_context
+                    ).transformBoundingBox(extent)
+                rect.combineExtentWith(extent)
+            if rect.isNull():
+                for layer in layers:
+                    rect.combineExtentWith(layer.extent())
         settings.setExtent(rect)
 
         settings.setOutputSize(QSize(int(width), int(height)))

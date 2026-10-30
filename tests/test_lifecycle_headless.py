@@ -139,8 +139,8 @@ def main():
 
     plugin.initGui()
     pump()
-    check("initGui adds a menu entry", len(iface.menu_actions) == 1,
-          iface.menu_actions)
+    check("initGui adds the panel and Data Explorer menu entries",
+          len(iface.menu_actions) == 2, iface.menu_actions)
     check("initGui adds a toolbar widget", len(iface.toolbar_widgets) == 1)
     check("initGui adds a status bar widget", len(iface.status.widgets) == 1)
     check("status widget starts as off",

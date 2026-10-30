@@ -1,224 +1,590 @@
-# QGISMCP - QGIS Model Context Protocol Integration
+<div align="center">
 
-QGISMCP connects [QGIS](https://qgis.org/) to [Claude AI](https://claude.ai/chat) through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro), allowing Claude to directly interact with and control QGIS. This integration enables prompt assisted project creation, layer loading, code execution and more.
+<img src="qgis_mcp_plugin/icon.svg" alt="QGIS MCP logo" width="96" height="96">
 
-This project is strongly based on the [BlenderMCP](https://github.com/ahujasid/blender-mcp/tree/main) project by [Siddharth Ahuja](https://x.com/sidahuj)
+# QGIS MCP
+
+**A geospatial data toolbox for QGIS: a click-driven Data Explorer for live satellite, weather, elevation and OpenStreetMap data, and a permission-gated Model Context Protocol server so Claude and other AI agents can drive the same engine.**
+
+*Talk to your GIS. Keep your hand on the brake.*
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![QGIS](https://img.shields.io/badge/QGIS-3.22%20to%204.x-589632?logo=qgis&logoColor=white)](https://qgis.org/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6f42c1)](https://modelcontextprotocol.io/)
+[![Plugin 4.1.0](https://img.shields.io/badge/plugin-4.1.0-blue)](CHANGELOG.md)
+[![GitHub stars](https://img.shields.io/github/stars/adilmunawar/qgis_mcp?style=social)](https://github.com/adilmunawar/qgis_mcp/stargazers)
+
+</div>
+
+---
+
+## QGIS MCP server: an AI assistant for QGIS
+
+QGIS MCP is a **QGIS AI assistant** built on the [Model Context Protocol](https://modelcontextprotocol.io/). It runs a small socket bridge inside QGIS and a standalone MCP server beside it, so an MCP client such as **Claude Desktop, Claude Code, Cursor or VS Code** can inspect and operate your QGIS session in plain language.
+
+If you work with geospatial data, you can ask things like:
+
+- "Load the district shapefile, filter it to Sugarcane parcels and tell me how many remain."
+- "Which CRS does this unlabelled layer most likely use? Show me a render to confirm."
+- "Run a buffer, clip it to the study area, and export the result to GeoPackage."
+- "Check this layer for invalid geometries and duplicates, then summarise the problems."
+- "Render the map and let me see it."
+- "Find the least cloudy Sentinel-2 scene over Multan this month, compute NDVI for the farms, and tell me which fields look stressed."
+- "Add the hospitals in this district from OpenStreetMap and attach today's temperature to each one."
+- "Stream the 30 m DEM for the valley, derive a hillshade, and put it under the roads."
+
+What sets it apart from a plain "run any code" bridge is **safety**. Every command carries a risk category (read, write, destructive, code). A **permission profile** decides whether each category is allowed, needs your approval, or is refused. Every command that reaches the dispatcher lands in an append-only **audit log**, so you can always answer "what did the AI change?".
+
+> This is a **Claude QGIS integration** and a general **Model Context Protocol GIS** server. Any MCP-compatible client can use it.
+
+## Table of contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Connect your MCP client](#connect-your-mcp-client)
+- [Tool reference](#tool-reference)
+- [Permission profiles](#permission-profiles)
+- [Wire protocol (NDJSON)](#wire-protocol-ndjson)
+- [Running the tests](#running-the-tests)
+- [Roadmap](#roadmap)
+- [FAQ and troubleshooting](#faq-and-troubleshooting)
+- [Contributing](#contributing)
+- [Credits](#credits)
+- [License](#license)
 
 ## Features
 
-- **Two-way communication**: Connect Claude AI to QGIS through a socket-based server.
-- **Project manipulation**: Create, load and save projects in QGIS.
-- **Layer manipulation**: Add and remove vector or raster layers to a project.
-- **Execute processing**: Execute processing algorithms ([Processing Toolbox](https://docs.qgis.org/3.40/en/docs/user_manual/processing/toolbox.html)).
-- **Code execution**: Run arbitrary Python code in QGIS from Claude. Very powerful, but also be very cautious using this tool.
+**Project**
+- Create, load and save `.qgz` projects; read project info and set the project CRS.
 
-## Components
+**Layers**
+- Add vector and raster layers, create in-memory scratch layers with typed fields, remove or reload layers.
+- Layer visibility, opacity, extent, field listing, CRS repair (`set_layer_crs`) and CRS detection (`detect_layer_crs`).
+- Export vector layers to GeoPackage, GeoJSON, Shapefile or CSV.
 
-The system consists of two main components:
+**Analysis (PyQGIS automation without writing PyQGIS)**
+- Exact feature counts, distinct values with counts, field statistics (min, max, sum, mean, median, stdev).
+- SQL across project layers through virtual layers (`execute_sql`), grouped aggregates, geometry validity checks, duplicate finding.
 
-1. **[QGIS plugin](/qgis_mcp_plugin/)**: A QGIS plugin that creates a socket server within QGIS to receive and execute commands.
-2. **[MCP Server](/src/qgis_mcp/qgis_mcp_server.py)**: A Python server that implements the Model Context Protocol and connects to the QGIS plugin.
+**Editing**
+- Add features from attributes and WKT, update values, delete features, add, rename and delete fields, build spatial indexes.
+- Destructive edits **dry-run by default** and report how many rows would change; they apply only with `confirm=true`.
+
+**Raster**
+- Band statistics and point sampling (`get_raster_statistics`, `sample_raster_values`).
+
+**Processing**
+- Discover algorithms, read their parameter help, and run any QGIS Processing algorithm.
+
+**Rendering and layouts**
+- Render the canvas to a file, or return it inline as an image the model can look at (`render_map_image`).
+- List and export print layouts to PDF or image.
+
+**Safety and permissions**
+- Four permission profiles, a non-blocking approval queue, temporary per-command grants, an optional pairing token, a loopback-only listener, and an opt-in code-execution tier.
+- Unknown commands are treated as destructive, so a newly added command fails closed.
+
+**Audit**
+- JSONL audit trail of every dispatched command (verdict, client, status, truncated params, duration), readable through `get_audit_log`.
+
+**Data Explorer dashboard (no AI required)**
+- A dock panel inside QGIS: pick an area of interest by typing a place, drawing a rectangle on the map, using the current view, a layer's extent or its selected features.
+- Tabs for Imagery, Weather, Elevation, OpenStreetMap, Hazards, Basemaps, Sources and a Log; every fetch runs as a background task with a progress bar and Cancel, so QGIS never freezes.
+- Search Sentinel-2 or Landsat scenes, stream true colour or chosen bands, compute NDVI and other indices with one click, build index time series, add DEMs and derive hillshade or slope, fetch OSM presets such as hospitals, roads, buildings and farmland, pull weather for the area centre or attach it to every feature of a layer.
+- Open it from the QGIS MCP toolbar button menu or `Plugins > QGIS MCP > Data Explorer`.
+
+**Live data (keyless public sources)**
+- **Satellite imagery**: search Sentinel-2, Landsat 8/9 and Sentinel-1 scenes over any area through STAC and stream them as cloud-optimised GeoTIFFs, nothing downloaded until rendered.
+- **Spectral indices**: NDVI, EVI, SAVI, NDWI, MNDWI, NDMI, NDBI, NBR, BSI or a custom band expression, cloud-masked with the Sentinel-2 scene classification, computed only over your area, styled on arrival, with class breakdowns and per-scene time series.
+- **Elevation**: Copernicus DEM 30 m mosaics on demand, plus slope, aspect, hillshade, roughness, TRI and TPI.
+- **Weather and climate**: Open-Meteo current conditions, forecasts, air quality and an hourly archive back to 1940; NASA POWER daily agro-climatology since 1981; weather fields attached to every feature of a layer.
+- **Places and OpenStreetMap**: Nominatim geocoding both ways, administrative boundaries as layers, any OSM feature type by tag through Overpass.
+- **Hazards**: USGS earthquakes for the last hour to month, NASA FIRMS active fires (free key).
+- **Basemaps**: OSM, Esri imagery and topo, CARTO, OpenTopoMap, and NASA GIBS daily satellite layers (true colour, NDVI, fires, snow, night lights, rainfall) selectable by date.
+- Every fetched layer carries provenance metadata: source, query, date and licence.
+
+**Panel**
+- A QGIS dock panel for server status, live counters, activity, approvals, profile switching, tokens and a one-click "Copy MCP client config" button.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Client["MCP client"]
+        C1["Claude Desktop / Claude Code / Cursor / VS Code"]
+    end
+    subgraph MCPProc["MCP server process (Python, uv)"]
+        S["qgis_mcp_server.py<br/>FastMCP tools"]
+    end
+    subgraph QGIS["QGIS 4 (PyQt6)"]
+        direction TB
+        L["Plugin socket server<br/>QTcpServer, 127.0.0.1"]
+        P["Permission manager<br/>profiles, approvals, grants"]
+        A["Audit log (JSONL)"]
+        H["Command handlers<br/>PyQGIS, Processing"]
+        UI["Dock panel"]
+        L --> P --> H
+        P --> A
+        P <--> UI
+    end
+    C1 <-->|"MCP over stdio"| S
+    S <-->|"NDJSON over TCP"| L
+```
+
+Two components:
+
+1. **QGIS plugin** ([`qgis_mcp_plugin/`](qgis_mcp_plugin/)) runs a socket server inside QGIS, authenticates clients, applies the permission profile, writes the audit log and executes commands on the GUI thread.
+2. **MCP server** ([`src/qgis_mcp/qgis_mcp_server.py`](src/qgis_mcp/qgis_mcp_server.py)) speaks MCP to your client over stdio and forwards each tool call to the plugin.
+
+Approvals are **non-blocking**: a command awaiting approval parks its reply instead of opening a modal dialog (which would freeze the very GUI thread the server runs on).
 
 ## Installation
 
 ### Prerequisites
 
-- QGIS 3.X (only tested on 3.22)
-- Claude desktop
-- Python 3.10 or newer
-- uv package manager:
+- **QGIS 4.x** (PyQt6). Developed and tested against QGIS 4.2.x. `metadata.txt` declares `qgisMinimumVersion=3.22` and `qgisMaximumVersion=4.99`, with `supportsQt6=True`.
+- **Python 3.12 or newer** for the MCP server (`requires-python = ">=3.12"`).
+- [**uv**](https://docs.astral.sh/uv/getting-started/installation/) package manager.
+- An MCP client (Claude Desktop, Claude Code, Cursor, VS Code, ...).
 
-If you're on Mac, please install uv as
+Install `uv`:
 
 ```bash
+# macOS
 brew install uv
-```
 
-On Windows Powershell
-
-```bash
+# Windows (PowerShell)
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Otherwise installation instructions are on their website: [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
-
-**⚠️ Do not proceed before installing UV**
-
-### Download code
-
-Download this repo to your computer. You can clone it with:
+### 1. Get the code
 
 ```bash
-git clone git@github.com:jjsantos01/qgis_mcp.git
+git clone https://github.com/adilmunawar/qgis_mcp.git
+cd qgis_mcp
 ```
 
-### QGIS plugin
+### 2. Install the QGIS plugin
 
-You need to copy the folder [qgis_mcp_plugin](/qgis_mcp_plugin/) and its content on your QGIS profile plugins folder.
+Copy (or symlink) the [`qgis_mcp_plugin`](qgis_mcp_plugin/) folder into your **QGIS 4 profile's** plugin directory. You can find the profile in QGIS via `Settings` > `User Profiles` > `Open Active Profile Folder`, then `python/plugins`.
 
-You can get your profile folder in QGIS going to menu `Settings` -> `User profiles` -> `Open active profile folder` Then, go to `Python/plugins` and paste the folder `qgis_mcp_plugin`.
+| OS | QGIS 4 plugin folder |
+| --- | --- |
+| Windows | `%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins` |
+| macOS | `~/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins` |
+| Linux | `~/.local/share/QGIS/QGIS4/profiles/default/python/plugins` |
 
-> On a Windows machine the plugins folder is usually located at: `C:\Users\USER\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins` 
+Windows (PowerShell), symlink for development:
 
-and on MacOS: `~/Library/Application\ Support/QGIS/QGIS3/profiles/default/python/plugins`
+```powershell
+$src = "$(pwd)\qgis_mcp_plugin"
+$dst = "$env:APPDATA\QGIS\QGIS4\profiles\default\python\plugins\qgis_mcp_plugin"
+New-Item -ItemType SymbolicLink -Path $dst -Target $src
+```
 
- Then close QGIS and open it again. Go to the menu option `Plugins` > `Installing and Managing Plugins`, select the `All` tab and search for "QGIS MCP", then mark the QGIS MCP checkbox.
+macOS and Linux:
 
-### Claude for Desktop Integration
+```bash
+# macOS
+ln -s "$(pwd)/qgis_mcp_plugin" "$HOME/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins/qgis_mcp_plugin"
+# Linux
+ln -s "$(pwd)/qgis_mcp_plugin" "$HOME/.local/share/QGIS/QGIS4/profiles/default/python/plugins/qgis_mcp_plugin"
+```
 
-Go to `Claude` > `Settings` > `Developer` > `Edit Config` > `claude_desktop_config.json` to include the following:
+> Using QGIS 3.x? The profile folder is `QGIS3` instead of `QGIS4`.
 
-> If you can't find the "Developers tab" or the `claude_desktop_config.json` look at this [documentation](https://modelcontextprotocol.io/quickstart/user#2-add-the-filesystem-mcp-server).
+Restart QGIS, open `Plugins` > `Manage and Install Plugins`, search for **QGIS MCP** and tick it.
+
+### 3. Start the bridge
+
+1. In QGIS, open `Plugins` > `QGIS MCP` to show the dock panel.
+2. Click **Start Server** (default `127.0.0.1:9876`).
+3. Choose a permission profile. If you enable the pairing token requirement, copy the token from the panel.
+
+The panel's **Copy MCP client config** button produces a ready-made snippet for your client.
+
+## Connect your MCP client
+
+The MCP server reads its settings from environment variables:
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `QGIS_MCP_HOST` | `127.0.0.1` | Host of the QGIS plugin socket |
+| `QGIS_MCP_PORT` | `9876` | Port of the QGIS plugin socket |
+| `QGIS_MCP_TOKEN` | *(empty)* | Pairing token shown in the QGIS MCP panel, when required |
+| `QGIS_MCP_TIMEOUT` | `120.0` | Per-request timeout in seconds |
+| `QGIS_MCP_CLIENT_NAME` | `claude-mcp` | Name shown in the panel and audit log |
+
+Replace `/ABSOLUTE/PATH/TO/qgis_mcp` with your clone path (on Windows use forward slashes or escaped backslashes).
+
+### Claude Desktop
+
+`Claude` > `Settings` > `Developer` > `Edit Config`, then edit `claude_desktop_config.json`:
 
 ```json
 {
-    "mcpServers": {
-        "qgis": {
-            "command": "uv",
-            "args": [
-                "--directory",
-                "/ABSOLUTE/PATH/TO/PARENT/REPO/FOLDER/qgis_mcp/src/qgis_mcp",
-                "run",
-                "qgis_mcp_server.py"
-            ]
-        }
-
+  "mcpServers": {
+    "qgis": {
+      "command": "uv",
+      "args": ["--directory", "/ABSOLUTE/PATH/TO/qgis_mcp/src/qgis_mcp", "run", "qgis_mcp_server.py"],
+      "env": {
+        "QGIS_MCP_HOST": "127.0.0.1",
+        "QGIS_MCP_PORT": "9876",
+        "QGIS_MCP_TOKEN": "paste-token-from-panel-if-required"
+      }
     }
+  }
 }
 ```
 
-## Usage
-
-### Starting the Connection
-
-1. In QGIS, go to `plugins` > `QGIS MCP` > `QGIS MCP`
-    ![plugins menu](/assets/imgs/qgis-plugins-menu.png)
-2. Click "Start Server"
-    ![start server](/assets/imgs/qgis-mcp-start-server.png)
-
-### Using with Claude
-
-Once the config file has been set on Claude, and the server is running on QGIS, you will see a hammer icon with tools for the QGIS MCP.
-
-![Claude tools](assets/imgs/claude-available-tools.png)
-
-#### Tools
-
-- `ping` - Simple ping command to check server connectivity
-- `get_qgis_info` - Get QGIS information about the current installation
-- `load_project` - Load a QGIS project from the specified path
-- `create_new_project` - Create a new project and save it
-- `get_project_info` - Get current project information
-- `add_vector_layer` - Add a vector layer to the project
-- `add_raster_layer` - Add a raster layer to the project
-- `get_layers` - Retrieve all layers in the current project
-- `remove_layer` - Remove a layer from the project by its ID
-- `zoom_to_layer` - Zoom to the extent of a specified layer
-- `get_layer_features` - Retrieve features from a vector layer with an optional limit
-- `execute_processing` - Execute a processing algorithm with the given parameters
-- `save_project` - Save the current project to the given path
-- `render_map` - Render the current map view to an image file
-- `execute_code` - Execute arbitrary PyQGIS code provided as a string
-
-### Example Commands
-
-This is the example I used for the [demo](https://x.com/jjsantoso/status/1900293848271667395):
-
-```plain
-You have access to the tools to work with QGIS. You will do the following:
-	1. Ping to check the connection. If it works, continue with the following steps.
-	2. Create a new project and save it at: "C:/Users/USER/GitHub/qgis_mcp/data/cdmx.qgz"
-	3. Load the vector layer: ""C:/Users/USER/GitHub/qgis_mcp/data/cdmx/mgpc_2019.shp" and name it "Colonias".
-	4. Load the raster layer: "C:/Users/USER/GitHub/qgis_mcp/data/09014.tif" and name it "BJ"
-	5. Zoom to the "BJ" layer.
-	6. Execute the centroid algorithm on the "Colonias" layer. Skip the geometry check. Save the output to "colonias_centroids.geojson".
-	7. Execute code to create a choropleth map using the "POB2010" field in the "Colonias" layer. Use the quantile classification method with 5 classes and the Spectral color ramp.
-	8. Render the map to "C:/Users/USER/GitHub/qgis_mcp/data/cdmx.png"
-	9. Save the project.
-```
-
----
-
-## Local fork notes (v3.0.0)
-
-This checkout has been modified from upstream to run on **QGIS 4.x / PyQt6**
-and to harden the socket bridge. Verified against QGIS 4.2.0 (Python 3.12,
-PyQt6) with `tests/test_plugin_headless.py` — 55 checks, all passing.
-
-### Protocol
-
-Newline-delimited JSON (NDJSON), one document per message, in both directions:
-
-    request   {"type": "<command>", "params": {...}, "id": <optional>}\n
-    response  {"status": "success"|"error", "result": ..., "id": <echoed>}\n
-
-v1 clients that send a bare JSON document with no trailing newline are still
-accepted, so the change is backward compatible.
-
-### Why the framing changed
-
-Without a delimiter, two requests arriving in one TCP segment look identical
-to one truncated request. The v1 loop called `json.loads` on the whole buffer
-and treated a parse failure as "incomplete", so concurrent or pipelined
-requests corrupted the buffer and the connection had to be rebuilt.
-
-### Other changes
-
-| Area | Change |
-| --- | --- |
-| Transport | `QTcpServer` (event driven, multi-client) replaces a 100 ms polling loop over a raw non-blocking socket |
-| Qt6 | `Qt.DockWidgetArea.RightDockWidgetArea`; scoped enums throughout |
-| Metadata | `supportsQt6=True`, `qgisMaximumVersion=4.99` (QGIS defaults the max to `<major>.99`, which marks the plugin incompatible with QGIS 4) |
-| Panel | Closing the dock no longer stops the server; the panel is a control surface, not the server's lifetime owner |
-| Safety | `execute_code` is gated behind an opt-in checkbox, persisted in `QgsSettings`; the listener binds `127.0.0.1` explicitly |
-| Settings | Port, code-execution consent and autostart persist across sessions |
-| Robustness | 32 MB per-client buffer cap; JSON encoder for Qt date/NULL/enum values; structured errors carrying `error_type` and a traceback |
-| Client | Fixed a liveness check on a non-existent attribute (`.sock` vs `.socket`) that silently forced a reconnect on every call; added timeouts, a lock, and one transparent retry |
-| Tools | 15 -> 29 (fields, extents, expression selection, canvas state, processing discovery, layouts) |
-
-### Running the tests
+### Claude Code
 
 ```bash
-"C:/Program Files/QGIS 4.2.0/bin/python-qgis.bat" tests/test_plugin_headless.py
+claude mcp add qgis \
+  --env QGIS_MCP_HOST=127.0.0.1 --env QGIS_MCP_PORT=9876 --env QGIS_MCP_TOKEN=your-token \
+  -- uv --directory /ABSOLUTE/PATH/TO/qgis_mcp/src/qgis_mcp run qgis_mcp_server.py
 ```
 
-### v3.0.0 - interface and capability release
+Or use a project-scoped `.mcp.json`:
 
-**Branding.** A purpose-drawn `icon.svg` (map-sheet stack + MCP node graph),
-rasterised to 16/24/32/48/128 px. Used for the toolbar action, plugin menu,
-dock title and the Plugin Manager listing via `icon=` in `metadata.txt`.
+```json
+{
+  "mcpServers": {
+    "qgis": {
+      "command": "uv",
+      "args": ["--directory", "/ABSOLUTE/PATH/TO/qgis_mcp/src/qgis_mcp", "run", "qgis_mcp_server.py"],
+      "env": { "QGIS_MCP_PORT": "9876", "QGIS_MCP_TOKEN": "your-token" }
+    }
+  }
+}
+```
 
-**Redesigned panel**, now three tabs:
+### Cursor
 
-- *Server* - logo header, colour-coded status pill (green running, amber when
-  code execution is enabled, red stopped), port and host, start/stop, live
-  Clients / Requests / Uptime counters, last command, and a one-click
-  "Copy MCP client config" button.
-- *Activity* - timestamped rolling log of connections, errors and toggles,
-  capped at 500 lines.
-- *Settings* - the `execute_code` consent toggle with an inline warning,
-  autostart, and "Open plugin folder".
+`.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
 
-**New commands (15).** 31 -> 46 total:
+```json
+{
+  "mcpServers": {
+    "qgis": {
+      "command": "uv",
+      "args": ["--directory", "/ABSOLUTE/PATH/TO/qgis_mcp/src/qgis_mcp", "run", "qgis_mcp_server.py"],
+      "env": { "QGIS_MCP_HOST": "127.0.0.1", "QGIS_MCP_PORT": "9876", "QGIS_MCP_TOKEN": "your-token" }
+    }
+  }
+}
+```
 
-| Command | Purpose |
-| --- | --- |
-| `create_memory_layer` | scratch layers with typed fields |
-| `add_features` / `delete_features` | editing; delete dry-runs unless `confirm=true` |
-| `set_layer_filter` / `get_layer_filter` / `clear_layer_filter` | subset filters with true before/after counts |
-| `count_features` | exact counts, bounded by `max_scan` |
-| `get_unique_values` | distinct values with counts, most common first |
-| `get_field_statistics` | count/distinct/missing/min/max/sum/mean/median/stdev |
-| `set_layer_crs` | declare a CRS (relabels, never reprojects) |
-| `export_layer` | write to GPKG/GeoJSON/Shapefile/CSV |
-| `set_layer_style` / `save_layer_style` | load and save `.qml` |
-| `set_layer_opacity`, `reload_layer`, `zoom_to_selection` | display control |
-| `render_map_base64` | PNG returned inline, so a client can *see* the map |
+### VS Code
 
-`render_map_image` on the MCP side returns real `ImageContent`, letting the
-model look at the map rather than writing a file for a human to open.
+`.vscode/mcp.json` (the top-level key is `servers`):
 
-**Correctness notes.** Expressions are parsed and rejected before use rather
-than failing mid-iteration. Counting iterates with `NoGeometry` and no
-attributes instead of trusting `featureCount()`, which is a provider-cached
-estimate that goes stale the moment a subset string is applied.
+```json
+{
+  "servers": {
+    "qgis": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["--directory", "/ABSOLUTE/PATH/TO/qgis_mcp/src/qgis_mcp", "run", "qgis_mcp_server.py"],
+      "env": { "QGIS_MCP_HOST": "127.0.0.1", "QGIS_MCP_PORT": "9876", "QGIS_MCP_TOKEN": "your-token" }
+    }
+  }
+}
+```
+
+> Never commit a real token. Use your client's secret or input-variable mechanism where available.
+
+### Example prompt
+
+```text
+You have access to QGIS tools. Please:
+1. Ping to check the connection.
+2. Create a new project at "C:/data/demo.qgz".
+3. Load "C:/data/districts.shp" as "Districts".
+4. Count features where "crop_class" = 'Sugarcane', then filter the layer to them.
+5. Check geometry validity and report any problems.
+6. Render the map so I can see it, then save the project.
+```
+
+## Tool reference
+
+The MCP server exposes **80 tools**. The **Risk** column is the category from [`permissions.py`](qgis_mcp_plugin/permissions.py); it decides what each [permission profile](#permission-profiles) does with the tool. `render_map_image` is a client-side wrapper over the plugin command `render_map_base64` (read).
+
+
+#### Diagnostics and audit
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `ping` | Check connectivity to the QGIS plugin. | `read` |
+| `get_qgis_info` | Get QGIS version, profile folder and Python version. | `read` |
+| `get_server_info` | Get plugin version, protocol version, and which commands are available. | `read` |
+| `get_audit_log` | Read the audit trail of commands the bridge has run. | `read` |
+
+#### Project
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `load_project` | Load a QGIS project from the specified path. | `destructive` |
+| `create_new_project` | Create a new project and save it. Clears the currently loaded project. | `destructive` |
+| `get_project_info` | Get current project information, including its layers. | `read` |
+| `save_project` | Save the project to the given path, or to its current path if omitted. | `destructive` |
+| `set_project_crs` | Set the project CRS, e.g. 'EPSG:4326'. | `write` |
+
+#### Layers
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `add_vector_layer` | Add a vector layer to the project. | `write` |
+| `add_raster_layer` | Add a raster layer to the project. | `write` |
+| `create_memory_layer` | Create an in-memory scratch layer. | `write` |
+| `get_layers` | Retrieve all layers in the current project with their metadata. | `read` |
+| `remove_layer` | Remove a layer from the project by its ID. | `destructive` |
+| `reload_layer` | Reload a layer from its source, picking up changes made on disk. | `write` |
+| `set_layer_visibility` | Show or hide a layer in the layer tree. | `write` |
+| `set_layer_opacity` | Set layer opacity, 0.0 (transparent) to 1.0 (opaque). | `write` |
+| `set_layer_crs` | Declare a layer's CRS, e.g. 'EPSG:32642'. | `write` |
+| `get_layer_fields` | List the attribute fields of a vector layer, with types. | `read` |
+| `get_layer_extent` | Get a layer's bounding box and CRS. | `read` |
+| `export_layer` | Export a vector layer to a file. Drivers: GPKG, GeoJSON, ESRI Shapefile, CSV. | `write` |
+| `zoom_to_layer` | Zoom the map canvas to the extent of a specified layer. | `write` |
+
+#### Styling
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `set_layer_style` | Apply a QGIS style (.qml) file to a layer. | `write` |
+| `save_layer_style` | Save a layer's current style to a .qml file. | `write` |
+
+#### Features, selection and filters
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `get_layer_features` | Retrieve features from a vector layer, optionally filtered. | `read` |
+| `count_features` | Count features exactly, optionally matching a QGIS expression. | `read` |
+| `get_unique_values` | List a field's distinct values with occurrence counts, most common first. | `read` |
+| `get_field_statistics` | Compute count, distinct, missing, min, max, sum, mean, median and stdev. | `read` |
+| `get_layer_filter` | Get the layer's current subset filter expression, if any. | `read` |
+| `set_layer_filter` | Filter a layer to features matching a QGIS expression. | `write` |
+| `clear_layer_filter` | Remove a layer's subset filter, restoring all features. | `write` |
+| `select_features_by_expression` | Select features matching a QGIS expression, and report how many matched. | `write` |
+| `get_selected_features` | Retrieve the currently selected features of a vector layer. | `read` |
+| `clear_selection` | Clear the selection on one layer, or on all vector layers if omitted. | `write` |
+| `zoom_to_selection` | Zoom the canvas to the selected features of a layer. | `write` |
+| `add_features` | Add features to a writable layer. | `write` |
+| `update_features` | Set field values on matching features. DESTRUCTIVE. | `destructive` |
+| `delete_features` | Delete features matching an expression. DESTRUCTIVE. | `destructive` |
+
+#### Schema
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `add_field` | Add an attribute field (string, integer, longlong, double, boolean, date, datetime). | `write` |
+| `rename_field` | Rename an attribute field. | `write` |
+| `delete_field` | Drop a field and every value in it. DESTRUCTIVE; dry-runs unless confirmed. | `destructive` |
+| `create_spatial_index` | Build a spatial index, which speeds up rendering and spatial queries. | `write` |
+
+#### Analysis and data quality
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `execute_sql` | Run SQL across project layers, joining and aggregating them. | `read` |
+| `group_statistics` | Aggregate a field grouped by another. | `read` |
+| `check_geometry_validity` | Report invalid or empty geometries, with the reason for each. | `read` |
+| `find_duplicates` | Find duplicates by attribute values, or by geometry if fields is omitted. | `read` |
+| `detect_layer_crs` | Infer a layer's true CRS from its coordinates when it is missing or wrong. | `read` |
+
+#### Raster
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `get_raster_statistics` | Band minimum, maximum, mean, standard deviation, range and sum. | `read` |
+| `sample_raster_values` | Read raster values at points. | `read` |
+
+#### Processing
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `list_processing_algorithms` | List available processing algorithms, optionally filtered by substring. | `read` |
+| `get_processing_algorithm_help` | Get the help text and parameter list for a processing algorithm. | `read` |
+| `execute_processing` | Execute a processing algorithm with the given parameters. | `destructive` |
+
+#### Canvas, rendering and layouts
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `get_canvas_state` | Get the map canvas extent, scale, rotation, CRS and size. | `read` |
+| `set_canvas_extent` | Set the map canvas extent, in project CRS coordinates. | `write` |
+| `render_map` | Render the map to an image file. | `write` |
+| `render_map_image` | Render the current map and return it as an image you can actually look at. | `read` |
+| `list_layouts` | List the print layouts defined in the current project. | `read` |
+| `export_layout` | Export a print layout to PDF or an image, chosen by the file extension. | `write` |
+
+#### Code
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `execute_code` | Execute arbitrary PyQGIS code inside QGIS. | `code` |
+
+#### Live data: discovery and places
+
+Every live-data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place": "Multan", "radius_km": 15}`, `{"bbox": [west, south, east, north]}`, `{"layer_id": "..."}`, `{"layer_id": "...", "selected": true}`, `{"canvas": true}`, `{"point": [lon, lat], "radius_km": 10}` or `{"wkt": "...", "crs": "EPSG:4326"}`.
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `list_data_sources` | Catalogue of live sources by category with licence and key requirements. | `read` |
+| `resolve_aoi` | Preview how an area-of-interest spec will be interpreted. | `read` |
+| `geocode` | Place name to coordinates and bounding box (Nominatim). | `read` |
+| `reverse_geocode` | Coordinates to a place description. | `read` |
+| `add_place_marker` | Add a geocoded place, with its boundary polygon when known, as a layer. | `write` |
+| `set_data_source_key` | Store an API key for a source that needs one (never echoed back). | `write` |
+
+#### Live data: satellite imagery and elevation
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `search_imagery` | Find Sentinel-2, Landsat or Sentinel-1 scenes over an area, least cloudy first. | `read` |
+| `add_imagery` | Stream a scene's bands into the project as cloud-optimised GeoTIFF layers. | `write` |
+| `compute_spectral_index` | NDVI, NDWI, NBR and more, or a custom expression, cloud-masked, over an area. | `write` |
+| `get_index_time_series` | Mean index per scene across a date range, with first-to-last change. | `read` |
+| `add_dem` | Stream Copernicus DEM 30 m covering an area as one layer. | `write` |
+| `derive_terrain` | Slope, aspect, hillshade, roughness, TRI or TPI from a DEM layer. | `write` |
+
+#### Live data: weather and climate
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `get_weather` | Current conditions, a daily forecast, or air quality for a point or area. | `read` |
+| `get_weather_history` | Historical daily weather since 1940 with per-variable summaries. | `read` |
+| `get_climate_series` | NASA POWER daily agro-climatology since 1981. | `read` |
+| `attach_weather_to_layer` | Add weather fields to every feature of a layer, sampled at its centroid. | `write` |
+
+#### Live data: basemaps, OpenStreetMap and hazards
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `list_basemaps` | Available basemaps, including NASA GIBS daily satellite layers. | `read` |
+| `add_basemap` | Add a tiled basemap underneath the other layers; GIBS layers take a date. | `write` |
+| `fetch_osm_features` | OpenStreetMap features by tag inside an area, as point or full-geometry layers. | `write` |
+| `fetch_earthquakes` | USGS earthquakes for the last hour to month, filtered by area and magnitude. | `write` |
+| `fetch_active_fires` | NASA FIRMS active fire detections for the last 1 to 10 days (free key). | `write` |
+
+
+> Commands missing from the permission table are treated as `destructive`, so new commands fail closed.
+
+## Permission profiles
+
+| Profile | read | write | destructive | code | Intended use |
+| --- | --- | --- | --- | --- | --- |
+| **Read-only** | allow | deny | deny | deny | Inspect only |
+| **Standard** (default) | allow | allow | approve | deny | Everyday editing; deletions and overwrites ask first |
+| **Full** | allow | allow | approve | approve | Everything available; destructive actions and code ask first |
+| **Master Control** | allow | allow | allow | allow | Unrestricted; nothing is refused or asks |
+
+- **approve** parks the command in the panel's approval queue until you accept, reject, or it times out (60 s by default).
+- **Temporary grants** let you allow one specific command for a number of minutes without changing profile.
+- `ping` and `get_server_info` are always allowed so a client can discover why it was refused.
+- **Pairing token** (optional): when required, clients must send a `hello` with the token before anything but `ping`.
+- The listener binds to `127.0.0.1`. Treat Master Control and `execute_code` as full control of QGIS's Python on your machine.
+- Every decision is written to `qgis_mcp_audit.jsonl` in the QGIS settings directory.
+
+## Wire protocol (NDJSON)
+
+The plugin and MCP server talk newline-delimited JSON over TCP (protocol version 3), one document per line in both directions:
+
+```text
+request   {"type": "<command>", "params": {...}, "id": <optional>}\n
+response  {"status": "success" | "error", "result": ..., "id": <echoed>}\n
+```
+
+- The MCP server first sends `{"type": "hello", "params": {"client": "<name>", "token": "<token>"}}`. The reply reports the protocol version and whether a token is required.
+- `ping` answers before authentication; everything else requires `hello` when a token is enforced.
+- Errors carry `error_type` (for example `Unauthorized`) and a `message`.
+- Bare JSON documents without a trailing newline from older v1 clients are still accepted.
+- Per-client buffers are capped at 32 MB.
+
+## Running the tests
+
+The headless tests run inside QGIS's own Python, with no GUI. On Windows with QGIS 4.2.2:
+
+```bat
+"C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_plugin_headless.py
+"C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_permissions_headless.py
+"C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_data_commands_headless.py
+"C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_lifecycle_headless.py
+```
+
+The tests import the plugin from the installed QGIS 4 profile (`%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins`), so symlink or copy the plugin there first. Adjust the QGIS path for your install location.
+
+## Roadmap
+
+Shipped in 4.1.0:
+
+- [x] **Satellite imagery**: Sentinel-2, Landsat and Sentinel-1 discovery and streaming through STAC
+- [x] **Spectral indices**: NDVI and eight more, custom expressions, cloud masking, time series
+- [x] **Weather and climate**: Open-Meteo and NASA POWER, attached to layers
+- [x] **Geocoding and OpenStreetMap**: Nominatim and Overpass
+- [x] **Elevation**: Copernicus DEM and terrain derivatives
+- [x] **Hazards and basemaps**: USGS earthquakes, NASA FIRMS, NASA GIBS daily imagery
+- [x] **Data Explorer dashboard**: the same engine driven by clicks inside QGIS, with background tasks
+
+Next:
+
+- [ ] **Sensors**: OGC SensorThings, OpenAQ, river gauges and buoys as refreshing layers, with alerts
+- [ ] **Change detection**: two-date index differencing with vectorised results and area per class
+- [ ] **3D**: building footprints with heights, point clouds, 3D Tiles and 3D scene rendering
+- [ ] **Background jobs**: long fetches as QGIS tasks with progress and cancel
+- [ ] **More sources**: Copernicus Data Space (Sentinel-5P, Sentinel-3), ESA WorldCover, SoilGrids, WaPOR, GloFAS, Overture buildings
+
+Track progress in the [CHANGELOG](CHANGELOG.md) and the issue tracker.
+
+## FAQ and troubleshooting
+
+**The tools do not appear in my client.**
+Check that your client config points at `src/qgis_mcp` with `uv --directory ... run qgis_mcp_server.py`, then restart the client. Run the command by hand to see import or `uv` errors.
+
+**"Connection refused" or timeouts.**
+The QGIS side must be listening. Open the QGIS MCP panel and click **Start Server**; confirm the port matches `QGIS_MCP_PORT`. Another process may hold port 9876: change the port in the panel and in your client config.
+
+**"QGIS refused the connection" or `Unauthorized`.**
+The panel requires a pairing token. Copy it into `QGIS_MCP_TOKEN` and restart the MCP client.
+
+**A command was refused.**
+The active profile denies its risk category. Raise the profile, grant that command temporarily, or approve it from the queue. Ask the assistant to call `get_audit_log` with `only_failures=true` to see why.
+
+**An approval request seems stuck.**
+It is waiting for you in the panel and times out after 60 seconds by default. Keep the client's `QGIS_MCP_TIMEOUT` longer than the approval timeout.
+
+**`execute_code` is denied.**
+Code is denied in Read-only and Standard, and needs approval in Full. Treat it as a last resort when no specific tool fits.
+
+**The plugin does not show up in QGIS 4.**
+Make sure it sits in the `QGIS4` profile folder (not `QGIS3`) and that `metadata.txt` has `supportsQt6=True`. Enable it under `Plugins` > `Manage and Install Plugins` after a restart.
+
+**Did `set_layer_crs` move my data?**
+No. It only relabels coordinates and never reprojects. Use a Processing reprojection algorithm for that.
+
+**Is my data sent anywhere?**
+The bridge listens on loopback only. Your MCP client and model provider see whatever tool results the model requests, so apply the same care as with any AI assistant.
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
+
+## Credits
+
+- Forked from and built on **[jjsantos01/qgis_mcp](https://github.com/jjsantos01/qgis_mcp)** by Juan Santos (MIT). The original project provided the QGIS plugin and MCP server this work extends.
+- Strongly inspired by **[BlenderMCP](https://github.com/ahujasid/blender-mcp)** by Siddharth Ahuja.
+- Built with the [Model Context Protocol](https://modelcontextprotocol.io/) Python SDK, [QGIS](https://qgis.org/) and [uv](https://docs.astral.sh/uv/).
+
+Maintained by [Adil Munawar](https://github.com/adilmunawar).
+
+## License
+
+[MIT](LICENSE). Copyright Adil Munawar 2026, with upstream copyright retained for jjsantos01.
+
+<sub>Keywords: QGIS MCP server, QGIS AI assistant, Claude QGIS integration, PyQGIS automation, Model Context Protocol GIS, QGIS plugin, geospatial AI agent, remote sensing, LLM agents.</sub>

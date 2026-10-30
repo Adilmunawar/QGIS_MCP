@@ -7,7 +7,9 @@ carry the answer back.
 """
 
 import base64
+import collections
 import enum
+import inspect
 import json
 import secrets
 import time
@@ -23,7 +25,7 @@ from .permissions import APPROVE, DENY, PermissionManager, category_for
 
 LOG_TAG = "QGIS MCP"
 PROTOCOL_VERSION = 3
-PLUGIN_VERSION = "4.0.0"
+PLUGIN_VERSION = "4.1.0"
 
 MAX_BUFFER_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_SCAN = 2_000_000
@@ -90,6 +92,11 @@ class ServerCore(QObject):
         self._buffers = {}
         self._clients = {}
         self._uptime = QElapsedTimer()
+        # Commands run on the GUI thread. A handler that spins a nested
+        # event loop (blocking HTTP, GDAL over HTTP) lets readyRead fire
+        # again mid-command, so messages arriving then are queued.
+        self._busy = False
+        self._queued = collections.deque()
 
     # ------------------------------------------------------------------
     # lifecycle
@@ -200,7 +207,10 @@ class ServerCore(QObject):
             sock.disconnectFromHost()
             return
         for message in self._extract_messages(buf):
-            self._handle_message(sock, message)
+            if self._busy:
+                self._queued.append((sock, message))
+            else:
+                self._handle_message(sock, message)
 
     @staticmethod
     def _extract_messages(buf):
@@ -354,14 +364,25 @@ class ServerCore(QObject):
 
     def _run_and_reply(self, sock, cmd, params, request_id, client_name, verdict):
         started = time.perf_counter()
-        response = self.execute_command({"type": cmd, "params": params})
+        self._busy = True
+        try:
+            response = self.execute_command({"type": cmd, "params": params})
+        finally:
+            self._busy = False
         elapsed = (time.perf_counter() - started) * 1000
+        self._drain_queue()
         ok = response.get("status") == "success"
         self._audit(cmd, verdict, client_name, response.get("status"),
                     detail=response.get("message"), params=params,
                     duration_ms=elapsed)
         self.request_handled.emit(cmd, ok)
         self._reply(sock, response, request_id)
+
+    def _drain_queue(self):
+        while self._queued and not self._busy:
+            sock, message = self._queued.popleft()
+            if sock in self._buffers:
+                self._handle_message(sock, message)
 
     def _audit(self, command, verdict, client, status=None, detail=None,
                params=None, duration_ms=None):
@@ -381,11 +402,19 @@ class ServerCore(QObject):
                 "message": f"Unknown command type: {cmd_type}",
                 "available": sorted(self._handlers()),
             }
+        if not isinstance(params, dict):
+            return {"status": "error", "error_type": "InvalidParameters",
+                    "message": "params must be a JSON object"}
+        try:
+            inspect.signature(handler).bind(**params)
+        except TypeError as exc:
+            # A signature mismatch, reported before the handler runs so a
+            # TypeError raised inside a handler keeps its traceback below.
+            return {"status": "error", "error_type": "InvalidParameters",
+                    "message": f"{cmd_type}: {exc}. Accepted parameters: "
+                               f"{list(inspect.signature(handler).parameters)}"}
         try:
             return {"status": "success", "result": handler(**params)}
-        except TypeError as exc:
-            return {"status": "error", "error_type": "InvalidParameters",
-                    "message": str(exc)}
         except Exception as exc:
             _log(f"{cmd_type} failed: {exc}", Qgis.MessageLevel.Critical)
             return {"status": "error", "error_type": type(exc).__name__,

@@ -10,3 +10,7 @@ wheels/
 # Virtual environments
 .venv
 data/
+tests/projects/*.qgz
+tests/projects/*.png
+tests/projects/*_log.json
+.venv/

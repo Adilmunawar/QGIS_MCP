@@ -388,7 +388,7 @@ def run(layer, server):
     # --- v3: server info ---------------------------------------------------
     info = c.request("get_server_info")
     check("get_server_info reports v4 and counters",
-          info["result"]["plugin_version"] == "4.0.0"
+          info["result"]["plugin_version"].startswith("4.")
           and info["result"]["requests_served"] > 0
           and len(info["result"]["commands"]) >= 40,
           f"{info['result']['plugin_version']}, "

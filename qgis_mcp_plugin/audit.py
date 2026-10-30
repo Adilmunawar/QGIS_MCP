@@ -14,6 +14,16 @@ import os
 import time
 
 MAX_PARAM_CHARS = 400
+SECRET_KEYS = {"key", "token", "password", "secret", "api_key", "apikey"}
+
+
+def _redact(value):
+    if isinstance(value, dict):
+        return {k: ("***" if str(k).lower() in SECRET_KEYS else _redact(v))
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [_redact(v) for v in value]
+    return value
 
 
 class AuditLog:
@@ -36,7 +46,7 @@ class AuditLog:
             "status": status,
         }
         if params:
-            text = json.dumps(params, default=str)
+            text = json.dumps(_redact(params), default=str)
             entry["params"] = (text[:MAX_PARAM_CHARS] + "...(truncated)"
                                if len(text) > MAX_PARAM_CHARS else text)
         if detail:
