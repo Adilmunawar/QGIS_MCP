@@ -1,13 +1,13 @@
 # Contributing to QGIS MCP
 
-Thank you for helping improve QGIS MCP, a permission-gated [Model Context Protocol](https://modelcontextprotocol.io/) server for [QGIS](https://qgis.org/). Bug reports, tool ideas, docs and code are all welcome. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Thank you for helping improve QGIS MCP, a permission gated [Model Context Protocol](https://modelcontextprotocol.io/) server for [QGIS](https://qgis.org/). Bug reports, tool ideas, docs and code are all welcome. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Project layout
 
 | Path | What it is |
 | --- | --- |
 | `qgis_mcp_plugin/` | The QGIS plugin: socket server, permissions, audit log, panel, command handlers |
-| `qgis_mcp_plugin/permissions.py` | Risk categories, profiles and the command-to-category table |
+| `qgis_mcp_plugin/permissions.py` | Risk categories, profiles and the table mapping commands to categories |
 | `qgis_mcp_plugin/command_help.py` | One-line description for every command |
 | `src/qgis_mcp/qgis_mcp_server.py` | The MCP server and its `@mcp.tool()` definitions |
 | `tests/` | Headless tests that run inside QGIS's Python |
@@ -60,17 +60,17 @@ A new command touches several places; keep them consistent:
 
 1. Implement the handler in the plugin (`qgis_mcp_plugin/`).
 2. Add it to `COMMAND_CATEGORIES` in `permissions.py` with the **lowest accurate** risk category (read, write, destructive, code). Anything missing defaults to destructive.
-3. Add a one-line description in `command_help.py`.
+3. Add a short description in `command_help.py`.
 4. Add the `@mcp.tool()` wrapper in `src/qgis_mcp/qgis_mcp_server.py`, above the `main()` entrypoint.
 5. Add or update headless tests.
 6. Update the README tool table and the CHANGELOG.
 
 Design rules:
 
-- Destructive operations should **dry-run by default** and require `confirm=true`.
-- Never block the GUI thread; approvals are non-blocking by design.
+- Destructive operations should **dry run by default** and require `confirm=true`.
+- Never block the GUI thread; approvals are non blocking by design.
 - Validate expressions and inputs before use and return structured errors.
-- Keep the loopback-only default and do not weaken authentication.
+- Keep the loopback only default and do not weaken authentication.
 
 ## Pull requests
 

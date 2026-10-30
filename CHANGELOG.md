@@ -14,11 +14,11 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Added
 - **Data Explorer dashboard** (`qgis_mcp_plugin/explorer.py`): a dock panel with an area-of-interest picker (place search with radius, draw on map, map view, layer extent, selection), tabs for imagery search and streaming, spectral indices and time series, weather and climate with attach-to-layer, Copernicus DEM and terrain products, OpenStreetMap presets and custom tags, earthquakes and fires, basemaps, source catalogue with key entry, and a log. Fetches run as `QgsTask` workers with progress and cancel; layers are created on the GUI thread. Opened from the toolbar button menu or `Plugins > QGIS MCP > Data Explorer`.
 - `tests/test_explorer_headless.py`: 30 offscreen checks driving the dashboard through the real task manager with stubbed HTTP, plus an `--online` scenario, with screenshots of every tab written to `tests/projects/`.
-- A live-data layer in the plugin: `net.py` (HTTP through the QGIS network manager), `aoi.py` (one area-of-interest resolver for place names, bboxes, layers, selections, canvas, points and WKT), `live_commands.py` and a `connectors/` package with a source registry.
+- A live data layer in the plugin: `net.py` (HTTP through the QGIS network manager), `aoi.py` (one area-of-interest resolver for place names, bboxes, layers, selections, canvas, points and WKT), `live_commands.py` and a `connectors/` package with a source registry.
 - 21 new commands and MCP tools: `list_data_sources`, `resolve_aoi`, `geocode`, `reverse_geocode`, `add_place_marker`, `search_imagery`, `add_imagery`, `compute_spectral_index`, `get_index_time_series`, `add_dem`, `derive_terrain`, `get_weather`, `get_weather_history`, `get_climate_series`, `attach_weather_to_layer`, `list_basemaps`, `add_basemap`, `fetch_osm_features`, `fetch_earthquakes`, `fetch_active_fires`, `set_data_source_key`. Tool count 59 -> 80.
 - STAC search on Element84 Earth Search (Sentinel-2 L2A and C1, Landsat C2 L2, Sentinel-1 GRD, Copernicus DEM) with Planetary Computer as a fallback; assets stream through GDAL `/vsicurl/`.
 - Nine spectral indices plus sandboxed custom expressions, Sentinel-2 SCL cloud masking, reflectance scale/offset handling, class breakdowns, GeoTIFF output with nodata and an automatic colour ramp.
-- Open-Meteo current, forecast, air quality and 1940+ archive; NASA POWER agro-climatology; batch weather fields on layer features.
+- Open-Meteo current, forecast, air quality and 1940+ archive; NASA POWER agro climatology; batch weather fields on layer features.
 - Nominatim geocoding with session cache and 1 request/second throttle; Overpass OSM fetch with failover and geometry-typed memory layers.
 - USGS earthquake feeds; NASA FIRMS active fires with a stored key; NASA GIBS dated WMTS basemaps and seven static basemaps.
 - Provenance metadata on every fetched layer (source, query, timestamp, licence, attribution).
@@ -46,11 +46,11 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 - `metadata.txt`: author, email, tags, changelog; plugin version 4.1.0.
 - GDAL HTTP tuning (range merging, block cache, no directory listing) so a remote COG opens in seconds rather than tens of seconds.
 
-## [4.0.0] - Permission-gated release
+## [4.0.0] - Permission gated release
 
 ### Added
-- Permission profiles: Read-only, Standard, Full and Master Control, mapping four risk categories (read, write, destructive, code) to allow, approve or deny.
-- Non-blocking approval queue for commands that need a human decision, with timeouts and temporary per-command grants.
+- Permission profiles: Read only, Standard, Full and Master Control, mapping four risk categories (read, write, destructive, code) to allow, approve or deny.
+- Non-blocking approval queue for commands that need a human decision, with timeouts and temporary per command grants.
 - Optional pairing token and a `hello` handshake; the MCP server reads `QGIS_MCP_TOKEN`, `QGIS_MCP_HOST`, `QGIS_MCP_PORT`, `QGIS_MCP_TIMEOUT` and `QGIS_MCP_CLIENT_NAME`.
 - Append-only JSONL audit log and the `get_audit_log` tool.
 - Data-analysis and editing tools: `execute_sql`, `group_statistics`, `check_geometry_validity`, `find_duplicates`, `detect_layer_crs`, `update_features`, `add_field`, `rename_field`, `delete_field`, `create_spatial_index`.
@@ -60,7 +60,7 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 
 ### Security
 - Unknown commands are treated as destructive so new commands fail closed.
-- Destructive edits dry-run unless `confirm=true`.
+- Destructive edits dry run unless `confirm=true`.
 
 ## [3.0.0] - Interface and capability release
 
@@ -75,7 +75,7 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Changed
 - Ported to QGIS 4 and PyQt6 (`supportsQt6=True`, `qgisMaximumVersion=4.99`).
 - Newline-delimited JSON (NDJSON) framing, backward compatible with v1 clients; event-driven `QTcpServer` replaces a polling loop.
-- `execute_code` gated behind an explicit opt-in; the listener binds to `127.0.0.1`.
+- `execute_code` gated behind an explicit opt in; the listener binds to `127.0.0.1`.
 - 32 MB per-client buffer cap, structured error responses, client timeouts and a transparent retry.
 - Tool count raised from 15 to 29.
 

@@ -21,7 +21,7 @@ Include the plugin version, QGIS version, OS, reproduction steps and the impact 
 ## Security model
 
 - **Loopback only.** The plugin listener binds to `127.0.0.1` by default. Do not expose the port to a network.
-- **Permission profiles.** Read-only, Standard, Full and Master Control gate four risk categories (read, write, destructive, code). Commands not in the table are treated as destructive.
+- **Permission profiles.** Read only, Standard, Full and Master Control gate four risk categories (read, write, destructive, code). Commands not in the table are treated as destructive.
 - **Approval queue.** Commands needing approval wait for a human decision in the QGIS panel and time out if unanswered.
 - **Pairing token.** Optionally require a token via the `hello` handshake. Keep `QGIS_MCP_TOKEN` out of version control.
 - **Audit log.** Every dispatched command is recorded in `qgis_mcp_audit.jsonl` in the QGIS settings directory.

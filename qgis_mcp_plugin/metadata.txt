@@ -1,6 +1,6 @@
 [general]
 name=QGIS MCP Bridge
-description=Data Explorer for live satellite, weather, elevation and OpenStreetMap data, plus a permission-gated MCP bridge so Claude and other AI agents can drive QGIS
+description=Open data toolbox for QGIS with a Data Explorer for live satellite imagery, weather, elevation and OpenStreetMap data, and a permission gated MCP bridge so Claude and other AI agents can drive QGIS
 version=4.1.0
 qgisMinimumVersion=3.22
 qgisMaximumVersion=4.99
@@ -19,4 +19,4 @@ changelog=4.1.0 - Data Explorer dashboard with AOI picker and background tasks. 
  4.0.0 - Permission profiles, approval queue, audit log, pairing token, 60 commands.
 
 [about]
-about=Runs a localhost NDJSON socket server inside QGIS so an MCP client (Claude Desktop, Claude Code, Cursor, VS Code) can inspect, edit, analyse and render projects. Every command has a risk category; profiles decide what runs, what asks a person first, and what is refused. Live-data commands stream Sentinel-2, Landsat and Copernicus DEM from public STAC catalogues, compute NDVI and other indices, pull weather and climate series, geocode places, and fetch OpenStreetMap and hazard feeds.
+about=Runs a localhost NDJSON socket server inside QGIS so an MCP client (Claude Desktop, Claude Code, Cursor, VS Code) can inspect, edit, analyse and render projects. Every command has a risk category; profiles decide what runs, what asks a person first, and what is refused. Live data commands stream Sentinel-2, Landsat and Copernicus DEM from public STAC catalogues, compute NDVI and other indices, pull weather and climate series, geocode places, and fetch OpenStreetMap and hazard feeds.

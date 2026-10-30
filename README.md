@@ -4,9 +4,9 @@
 
 # QGIS MCP
 
-**A geospatial data toolbox for QGIS: a click-driven Data Explorer for live satellite, weather, elevation and OpenStreetMap data, and a permission-gated Model Context Protocol server so Claude and other AI agents can drive the same engine.**
+**A geospatial data toolbox for QGIS. The Data Explorer brings live satellite imagery, weather, elevation and OpenStreetMap data into your project with a few clicks, and a permission gated Model Context Protocol server lets Claude and other AI agents drive the same engine.**
 
-*Talk to your GIS. Keep your hand on the brake.*
+*Explore the world's open data from inside QGIS, and let AI assist with full control in your hands.*
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![QGIS](https://img.shields.io/badge/QGIS-3.22%20to%204.x-589632?logo=qgis&logoColor=white)](https://qgis.org/)
@@ -14,6 +14,8 @@
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6f42c1)](https://modelcontextprotocol.io/)
 [![Plugin 4.1.0](https://img.shields.io/badge/plugin-4.1.0-blue)](CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/adilmunawar/qgis_mcp?style=social)](https://github.com/adilmunawar/qgis_mcp/stargazers)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](#contributing)
+[![Good first issues](https://img.shields.io/github/issues/adilmunawar/qgis_mcp/good%20first%20issue?label=good%20first%20issues)](https://github.com/adilmunawar/qgis_mcp/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 </div>
 
@@ -34,9 +36,9 @@ If you work with geospatial data, you can ask things like:
 - "Add the hospitals in this district from OpenStreetMap and attach today's temperature to each one."
 - "Stream the 30 m DEM for the valley, derive a hillshade, and put it under the roads."
 
-What sets it apart from a plain "run any code" bridge is **safety**. Every command carries a risk category (read, write, destructive, code). A **permission profile** decides whether each category is allowed, needs your approval, or is refused. Every command that reaches the dispatcher lands in an append-only **audit log**, so you can always answer "what did the AI change?".
+What sets it apart from a plain "run any code" bridge is **safety**. Every command carries a risk category (read, write, destructive, code). A **permission profile** decides whether each category is allowed, needs your approval, or is refused. Every command that reaches the dispatcher lands in an append only **audit log**, so you can always answer "what did the AI change?".
 
-> This is a **Claude QGIS integration** and a general **Model Context Protocol GIS** server. Any MCP-compatible client can use it.
+> This is a **Claude QGIS integration** and a general **Model Context Protocol GIS** server. Any client that speaks the Model Context Protocol can use it.
 
 ## Table of contents
 
@@ -60,7 +62,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 - Create, load and save `.qgz` projects; read project info and set the project CRS.
 
 **Layers**
-- Add vector and raster layers, create in-memory scratch layers with typed fields, remove or reload layers.
+- Add vector and raster layers, create in memory scratch layers with typed fields, remove or reload layers.
 - Layer visibility, opacity, extent, field listing, CRS repair (`set_layer_crs`) and CRS detection (`detect_layer_crs`).
 - Export vector layers to GeoPackage, GeoJSON, Shapefile or CSV.
 
@@ -70,7 +72,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 
 **Editing**
 - Add features from attributes and WKT, update values, delete features, add, rename and delete fields, build spatial indexes.
-- Destructive edits **dry-run by default** and report how many rows would change; they apply only with `confirm=true`.
+- Destructive edits **dry run by default** and report how many rows would change; they apply only with `confirm=true`.
 
 **Raster**
 - Band statistics and point sampling (`get_raster_statistics`, `sample_raster_values`).
@@ -83,7 +85,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 - List and export print layouts to PDF or image.
 
 **Safety and permissions**
-- Four permission profiles, a non-blocking approval queue, temporary per-command grants, an optional pairing token, a loopback-only listener, and an opt-in code-execution tier.
+- Four permission profiles, a non blocking approval queue, temporary per command grants, an optional pairing token, a loopback only listener, and an opt in code execution tier.
 - Unknown commands are treated as destructive, so a newly added command fails closed.
 
 **Audit**
@@ -96,17 +98,17 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 - Open it from the QGIS MCP toolbar button menu or `Plugins > QGIS MCP > Data Explorer`.
 
 **Live data (keyless public sources)**
-- **Satellite imagery**: search Sentinel-2, Landsat 8/9 and Sentinel-1 scenes over any area through STAC and stream them as cloud-optimised GeoTIFFs, nothing downloaded until rendered.
-- **Spectral indices**: NDVI, EVI, SAVI, NDWI, MNDWI, NDMI, NDBI, NBR, BSI or a custom band expression, cloud-masked with the Sentinel-2 scene classification, computed only over your area, styled on arrival, with class breakdowns and per-scene time series.
+- **Satellite imagery**: search Sentinel-2, Landsat 8/9 and Sentinel-1 scenes over any area through STAC and stream them as cloud optimised GeoTIFFs, nothing downloaded until rendered.
+- **Spectral indices**: NDVI, EVI, SAVI, NDWI, MNDWI, NDMI, NDBI, NBR, BSI or a custom band expression, cloud masked with the Sentinel-2 scene classification, computed only over your area, styled on arrival, with class breakdowns and per scene time series.
 - **Elevation**: Copernicus DEM 30 m mosaics on demand, plus slope, aspect, hillshade, roughness, TRI and TPI.
-- **Weather and climate**: Open-Meteo current conditions, forecasts, air quality and an hourly archive back to 1940; NASA POWER daily agro-climatology since 1981; weather fields attached to every feature of a layer.
+- **Weather and climate**: Open-Meteo current conditions, forecasts, air quality and an hourly archive back to 1940; NASA POWER daily agro climatology since 1981; weather fields attached to every feature of a layer.
 - **Places and OpenStreetMap**: Nominatim geocoding both ways, administrative boundaries as layers, any OSM feature type by tag through Overpass.
 - **Hazards**: USGS earthquakes for the last hour to month, NASA FIRMS active fires (free key).
 - **Basemaps**: OSM, Esri imagery and topo, CARTO, OpenTopoMap, and NASA GIBS daily satellite layers (true colour, NDVI, fires, snow, night lights, rainfall) selectable by date.
 - Every fetched layer carries provenance metadata: source, query, date and licence.
 
 **Panel**
-- A QGIS dock panel for server status, live counters, activity, approvals, profile switching, tokens and a one-click "Copy MCP client config" button.
+- A QGIS dock panel for server status, live counters, activity, approvals, profile switching, tokens and a one click "Copy MCP client config" button.
 
 ## Architecture
 
@@ -138,7 +140,7 @@ Two components:
 1. **QGIS plugin** ([`qgis_mcp_plugin/`](qgis_mcp_plugin/)) runs a socket server inside QGIS, authenticates clients, applies the permission profile, writes the audit log and executes commands on the GUI thread.
 2. **MCP server** ([`src/qgis_mcp/qgis_mcp_server.py`](src/qgis_mcp/qgis_mcp_server.py)) speaks MCP to your client over stdio and forwards each tool call to the plugin.
 
-Approvals are **non-blocking**: a command awaiting approval parks its reply instead of opening a modal dialog (which would freeze the very GUI thread the server runs on).
+Approvals are **non blocking**: a command awaiting approval parks its reply instead of opening a modal dialog (which would freeze the very GUI thread the server runs on).
 
 ## Installation
 
@@ -206,7 +208,7 @@ Restart QGIS, open `Plugins` > `Manage and Install Plugins`, search for **QGIS M
 2. Click **Start Server** (default `127.0.0.1:9876`).
 3. Choose a permission profile. If you enable the pairing token requirement, copy the token from the panel.
 
-The panel's **Copy MCP client config** button produces a ready-made snippet for your client.
+The panel's **Copy MCP client config** button produces a ready made snippet for your client.
 
 ## Connect your MCP client
 
@@ -217,7 +219,7 @@ The MCP server reads its settings from environment variables:
 | `QGIS_MCP_HOST` | `127.0.0.1` | Host of the QGIS plugin socket |
 | `QGIS_MCP_PORT` | `9876` | Port of the QGIS plugin socket |
 | `QGIS_MCP_TOKEN` | *(empty)* | Pairing token shown in the QGIS MCP panel, when required |
-| `QGIS_MCP_TIMEOUT` | `120.0` | Per-request timeout in seconds |
+| `QGIS_MCP_TIMEOUT` | `300.0` | Timeout per request in seconds |
 | `QGIS_MCP_CLIENT_NAME` | `claude-mcp` | Name shown in the panel and audit log |
 
 Replace `/ABSOLUTE/PATH/TO/qgis_mcp` with your clone path (on Windows use forward slashes or escaped backslashes).
@@ -250,7 +252,7 @@ claude mcp add qgis \
   -- uv --directory /ABSOLUTE/PATH/TO/qgis_mcp/src/qgis_mcp run qgis_mcp_server.py
 ```
 
-Or use a project-scoped `.mcp.json`:
+Or use a project scoped `.mcp.json`:
 
 ```json
 {
@@ -282,7 +284,7 @@ Or use a project-scoped `.mcp.json`:
 
 ### VS Code
 
-`.vscode/mcp.json` (the top-level key is `servers`):
+`.vscode/mcp.json` (the top level key is `servers`):
 
 ```json
 {
@@ -313,7 +315,7 @@ You have access to QGIS tools. Please:
 
 ## Tool reference
 
-The MCP server exposes **80 tools**. The **Risk** column is the category from [`permissions.py`](qgis_mcp_plugin/permissions.py); it decides what each [permission profile](#permission-profiles) does with the tool. `render_map_image` is a client-side wrapper over the plugin command `render_map_base64` (read).
+The MCP server exposes **80 tools**. The **Risk** column is the category from [`permissions.py`](qgis_mcp_plugin/permissions.py); it decides what each [permission profile](#permission-profiles) does with the tool. `render_map_image` is a wrapper on the client side over the plugin command `render_map_base64` (read).
 
 
 #### Diagnostics and audit
@@ -341,7 +343,7 @@ The MCP server exposes **80 tools**. The **Risk** column is the category from [`
 | --- | --- | --- |
 | `add_vector_layer` | Add a vector layer to the project. | `write` |
 | `add_raster_layer` | Add a raster layer to the project. | `write` |
-| `create_memory_layer` | Create an in-memory scratch layer. | `write` |
+| `create_memory_layer` | Create an in memory scratch layer. | `write` |
 | `get_layers` | Retrieve all layers in the current project with their metadata. | `read` |
 | `remove_layer` | Remove a layer from the project by its ID. | `destructive` |
 | `reload_layer` | Reload a layer from its source, picking up changes made on disk. | `write` |
@@ -385,7 +387,7 @@ The MCP server exposes **80 tools**. The **Risk** column is the category from [`
 | --- | --- | --- |
 | `add_field` | Add an attribute field (string, integer, longlong, double, boolean, date, datetime). | `write` |
 | `rename_field` | Rename an attribute field. | `write` |
-| `delete_field` | Drop a field and every value in it. DESTRUCTIVE; dry-runs unless confirmed. | `destructive` |
+| `delete_field` | Drop a field and every value in it. DESTRUCTIVE; dry runs unless confirmed. | `destructive` |
 | `create_spatial_index` | Build a spatial index, which speeds up rendering and spatial queries. | `write` |
 
 #### Analysis and data quality
@@ -432,12 +434,12 @@ The MCP server exposes **80 tools**. The **Risk** column is the category from [`
 
 #### Live data: discovery and places
 
-Every live-data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place": "Multan", "radius_km": 15}`, `{"bbox": [west, south, east, north]}`, `{"layer_id": "..."}`, `{"layer_id": "...", "selected": true}`, `{"canvas": true}`, `{"point": [lon, lat], "radius_km": 10}` or `{"wkt": "...", "crs": "EPSG:4326"}`.
+Every live data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place": "Multan", "radius_km": 15}`, `{"bbox": [west, south, east, north]}`, `{"layer_id": "..."}`, `{"layer_id": "...", "selected": true}`, `{"canvas": true}`, `{"point": [lon, lat], "radius_km": 10}` or `{"wkt": "...", "crs": "EPSG:4326"}`.
 
 | Tool | Purpose | Risk |
 | --- | --- | --- |
 | `list_data_sources` | Catalogue of live sources by category with licence and key requirements. | `read` |
-| `resolve_aoi` | Preview how an area-of-interest spec will be interpreted. | `read` |
+| `resolve_aoi` | Preview how an area of interest will be interpreted. | `read` |
 | `geocode` | Place name to coordinates and bounding box (Nominatim). | `read` |
 | `reverse_geocode` | Coordinates to a place description. | `read` |
 | `add_place_marker` | Add a geocoded place, with its boundary polygon when known, as a layer. | `write` |
@@ -448,9 +450,9 @@ Every live-data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place"
 | Tool | Purpose | Risk |
 | --- | --- | --- |
 | `search_imagery` | Find Sentinel-2, Landsat or Sentinel-1 scenes over an area, least cloudy first. | `read` |
-| `add_imagery` | Stream a scene's bands into the project as cloud-optimised GeoTIFF layers. | `write` |
-| `compute_spectral_index` | NDVI, NDWI, NBR and more, or a custom expression, cloud-masked, over an area. | `write` |
-| `get_index_time_series` | Mean index per scene across a date range, with first-to-last change. | `read` |
+| `add_imagery` | Stream a scene's bands into the project as cloud optimised GeoTIFF layers. | `write` |
+| `compute_spectral_index` | NDVI, NDWI, NBR and more, or a custom expression, cloud masked, over an area. | `write` |
+| `get_index_time_series` | Mean index per scene across a date range, with the change from first to last scene. | `read` |
 | `add_dem` | Stream Copernicus DEM 30 m covering an area as one layer. | `write` |
 | `derive_terrain` | Slope, aspect, hillshade, roughness, TRI or TPI from a DEM layer. | `write` |
 
@@ -459,8 +461,8 @@ Every live-data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place"
 | Tool | Purpose | Risk |
 | --- | --- | --- |
 | `get_weather` | Current conditions, a daily forecast, or air quality for a point or area. | `read` |
-| `get_weather_history` | Historical daily weather since 1940 with per-variable summaries. | `read` |
-| `get_climate_series` | NASA POWER daily agro-climatology since 1981. | `read` |
+| `get_weather_history` | Historical daily weather since 1940 with per variable summaries. | `read` |
+| `get_climate_series` | NASA POWER daily agro climatology since 1981. | `read` |
 | `attach_weather_to_layer` | Add weather fields to every feature of a layer, sampled at its centroid. | `write` |
 
 #### Live data: basemaps, OpenStreetMap and hazards
@@ -469,7 +471,7 @@ Every live-data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place"
 | --- | --- | --- |
 | `list_basemaps` | Available basemaps, including NASA GIBS daily satellite layers. | `read` |
 | `add_basemap` | Add a tiled basemap underneath the other layers; GIBS layers take a date. | `write` |
-| `fetch_osm_features` | OpenStreetMap features by tag inside an area, as point or full-geometry layers. | `write` |
+| `fetch_osm_features` | OpenStreetMap features by tag inside an area, as point or full geometry layers. | `write` |
 | `fetch_earthquakes` | USGS earthquakes for the last hour to month, filtered by area and magnitude. | `write` |
 | `fetch_active_fires` | NASA FIRMS active fire detections for the last 1 to 10 days (free key). | `write` |
 
@@ -480,7 +482,7 @@ Every live-data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place"
 
 | Profile | read | write | destructive | code | Intended use |
 | --- | --- | --- | --- | --- | --- |
-| **Read-only** | allow | deny | deny | deny | Inspect only |
+| **Read only** | allow | deny | deny | deny | Inspect only |
 | **Standard** (default) | allow | allow | approve | deny | Everyday editing; deletions and overwrites ask first |
 | **Full** | allow | allow | approve | approve | Everything available; destructive actions and code ask first |
 | **Master Control** | allow | allow | allow | allow | Unrestricted; nothing is refused or asks |
@@ -494,7 +496,7 @@ Every live-data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place"
 
 ## Wire protocol (NDJSON)
 
-The plugin and MCP server talk newline-delimited JSON over TCP (protocol version 3), one document per line in both directions:
+The plugin and MCP server talk newline delimited JSON over TCP (protocol version 3), one document per line in both directions:
 
 ```text
 request   {"type": "<command>", "params": {...}, "id": <optional>}\n
@@ -505,7 +507,7 @@ response  {"status": "success" | "error", "result": ..., "id": <echoed>}\n
 - `ping` answers before authentication; everything else requires `hello` when a token is enforced.
 - Errors carry `error_type` (for example `Unauthorized`) and a `message`.
 - Bare JSON documents without a trailing newline from older v1 clients are still accepted.
-- Per-client buffers are capped at 32 MB.
+- Buffers per client are capped at 32 MB.
 
 ## Running the tests
 
@@ -535,7 +537,7 @@ Shipped in 4.1.0:
 Next:
 
 - [ ] **Sensors**: OGC SensorThings, OpenAQ, river gauges and buoys as refreshing layers, with alerts
-- [ ] **Change detection**: two-date index differencing with vectorised results and area per class
+- [ ] **Change detection**: two date index differencing with vectorised results and area per class
 - [ ] **3D**: building footprints with heights, point clouds, 3D Tiles and 3D scene rendering
 - [ ] **Background jobs**: long fetches as QGIS tasks with progress and cancel
 - [ ] **More sources**: Copernicus Data Space (Sentinel-5P, Sentinel-3), ESA WorldCover, SoilGrids, WaPOR, GloFAS, Overture buildings
@@ -560,7 +562,7 @@ The active profile denies its risk category. Raise the profile, grant that comma
 It is waiting for you in the panel and times out after 60 seconds by default. Keep the client's `QGIS_MCP_TIMEOUT` longer than the approval timeout.
 
 **`execute_code` is denied.**
-Code is denied in Read-only and Standard, and needs approval in Full. Treat it as a last resort when no specific tool fits.
+Code is denied in Read only and Standard, and needs approval in Full. Treat it as a last resort when no specific tool fits.
 
 **The plugin does not show up in QGIS 4.**
 Make sure it sits in the `QGIS4` profile folder (not `QGIS3`) and that `metadata.txt` has `supportsQt6=True`. Enable it under `Plugins` > `Manage and Install Plugins` after a restart.
@@ -573,7 +575,28 @@ The bridge listens on loopback only. Your MCP client and model provider see what
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
+This project is growing into a complete open data toolbox for QGIS, and it needs more hands. Whether you are a GIS analyst, a remote sensing researcher, a Python developer or a technical writer, there is a place for you here.
+
+**Where help is most valuable right now**
+
+| Area | What it involves | Skills |
+| --- | --- | --- |
+| New data connectors | Sensor networks (OGC SensorThings, OpenAQ, river gauges), Copernicus Data Space, ESA WorldCover, SoilGrids, FAO WaPOR, Overture buildings | Python, public APIs |
+| Analysis workflows | Change detection between two dates, flood mapping with Sentinel-1, urban heat with Landsat thermal, crop health reports | Remote sensing, PyQGIS |
+| 3D | Building footprints with heights, point clouds, 3D Tiles, scene rendering | QGIS 3D, GDAL |
+| Dashboard | New tabs, better result views, charts for time series, accessibility | PyQt6, UX |
+| MCP server | Resources and prompts, background jobs with progress, Streamable HTTP transport | Python, MCP |
+| Quality | Tests on Linux and macOS, continuous integration with the QGIS Docker image, translations | Testing, CI |
+| Documentation | Tutorials, screenshots, videos, example prompts, use cases from your field | Writing |
+
+**How to start**
+
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and the checklist for adding a command.
+2. Look at the [open issues](https://github.com/adilmunawar/qgis_mcp/issues), especially those labelled `good first issue` and `help wanted`, or open a new issue to propose an idea.
+3. Fork, create a branch, add tests under `tests/` (the live data suite shows how to stub HTTP so no network is needed), and open a pull request.
+4. Join the [Discussions](https://github.com/adilmunawar/qgis_mcp/discussions) to ask questions, share maps you built with it, or request a data source.
+
+Every contribution is credited in the changelog and the contributors list. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report vulnerabilities as described in [SECURITY.md](SECURITY.md).
 
 ## Credits
 
