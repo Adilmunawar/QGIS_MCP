@@ -39,6 +39,7 @@ from ._server_core import (
 )
 from .data_commands import DataCommandsMixin
 from .live_commands import LiveDataMixin
+from .toolbox_commands import ToolboxMixin
 
 _EXPORT_SUCCESS = getattr(
     getattr(QgsLayoutExporter, "ExportResult", QgsLayoutExporter), "Success", 0
@@ -56,7 +57,7 @@ GEOMETRY_KEYWORDS = {
 }
 
 
-class QgisMCPServer(LiveDataMixin, DataCommandsMixin, ServerCore):
+class QgisMCPServer(ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
     """The full command surface, mounted on the gated transport."""
 
     def _handlers(self):
@@ -156,6 +157,23 @@ class QgisMCPServer(LiveDataMixin, DataCommandsMixin, ServerCore):
             "fetch_osm_features": self.fetch_osm_features,
             "fetch_earthquakes": self.fetch_earthquakes,
             "fetch_active_fires": self.fetch_active_fires,
+            # toolbox: datasets, soil, water, boundaries, species, sensors, alerts
+            "list_datasets": self.list_datasets,
+            "add_dataset": self.add_dataset,
+            "summarise_land_cover": self.summarise_land_cover,
+            "get_soil_properties": self.get_soil_properties,
+            "attach_soil_to_layer": self.attach_soil_to_layer,
+            "get_river_discharge": self.get_river_discharge,
+            "get_marine_conditions": self.get_marine_conditions,
+            "get_elevation": self.get_elevation,
+            "add_admin_boundaries": self.add_admin_boundaries,
+            "fetch_species_occurrences": self.fetch_species_occurrences,
+            "fetch_air_sensors": self.fetch_air_sensors,
+            "fetch_disaster_alerts": self.fetch_disaster_alerts,
+            "compute_index_change": self.compute_index_change,
+            "zonal_index_statistics": self.zonal_index_statistics,
+            "add_imagery_series": self.add_imagery_series,
+            "export_area_report": self.export_area_report,
         }
 
     # ------------------------------------------------------------------
@@ -170,7 +188,11 @@ class QgisMCPServer(LiveDataMixin, DataCommandsMixin, ServerCore):
     def _layer_or_raise(layer_id):
         layer = QgsProject.instance().mapLayer(layer_id)
         if layer is None:
-            raise LookupError(f"Layer not found: {layer_id}")
+            names = [f"{l.name()} ({lid})" for lid, l in
+                     list(QgsProject.instance().mapLayers().items())[:8]]
+            raise LookupError(
+                f"Layer not found: {layer_id}. Use get_layers to list ids"
+                + (f"; current layers: {names}" if names else "; the project has no layers"))
         return layer
 
     @classmethod

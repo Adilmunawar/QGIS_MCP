@@ -98,6 +98,23 @@ COMMAND_HELP = {
     "fetch_osm_features": "OpenStreetMap features by tag inside an area.",
     "fetch_earthquakes": "USGS earthquakes for the last hour to month.",
     "fetch_active_fires": "NASA FIRMS active fire detections (needs key).",
+    # toolbox
+    "list_datasets": "Global datasets the toolbox can add: land cover, land use, surface water, NASADEM.",
+    "add_dataset": "Add a global dataset clipped to the area, with a class summary.",
+    "summarise_land_cover": "Share of the area per land cover class.",
+    "get_soil_properties": "SoilGrids texture, pH, carbon at a point.",
+    "attach_soil_to_layer": "Add topsoil properties to features at centroids.",
+    "get_river_discharge": "GloFAS river discharge forecast and history.",
+    "get_marine_conditions": "Waves, swell and sea temperature at a point.",
+    "get_elevation": "Elevation at points or the area centre.",
+    "add_admin_boundaries": "Country admin units from geoBoundaries.",
+    "fetch_species_occurrences": "GBIF species records in the area.",
+    "fetch_air_sensors": "Sensor.Community air quality stations nearby.",
+    "fetch_disaster_alerts": "GDACS disaster alerts, optionally in the area.",
+    "compute_index_change": "Index difference between two periods: loss and gain.",
+    "zonal_index_statistics": "Mean index per polygon of a layer.",
+    "add_imagery_series": "Several dated scenes for the temporal controller.",
+    "export_area_report": "HTML briefing: map, weather, land cover, soil, NDVI.",
 }
 
 

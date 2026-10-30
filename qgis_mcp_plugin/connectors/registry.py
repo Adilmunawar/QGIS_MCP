@@ -14,6 +14,8 @@ VECTOR = "vector"
 HAZARDS = "hazards"
 BASEMAPS = "basemaps"
 SENSORS = "sensors"
+LAND = "land"
+BIODIVERSITY = "biodiversity"
 
 CATEGORIES = {
     IMAGERY: "Satellite imagery and derived spectral indices",
@@ -22,7 +24,9 @@ CATEGORIES = {
     VECTOR: "Reference vector data: places, boundaries, OpenStreetMap",
     HAZARDS: "Live hazard feeds: earthquakes, fires, disasters",
     BASEMAPS: "Tiled basemaps and daily global imagery",
-    SENSORS: "Real-time sensor and observation networks",
+    SENSORS: "Real time sensor and observation networks",
+    LAND: "Land cover, land use and soil",
+    BIODIVERSITY: "Species observations and ecology",
 }
 
 REGISTRY = {}
@@ -80,9 +84,9 @@ source("earth-search", "Element84 Earth Search (AWS Open Data)", IMAGERY,
 source("planetary-computer", "Microsoft Planetary Computer", IMAGERY,
        licence="Varies per collection",
        auth="none",
-       description="STAC catalogue with signed asset URLs; used as a fallback "
-                   "when Earth Search lacks a collection.",
-       commands=["search_imagery"],
+       description="STAC catalogue with signed asset URLs: Esri land use, JRC "
+                   "surface water, NASADEM, and a fallback for imagery.",
+       commands=["search_imagery", "add_dataset"],
        docs="https://planetarycomputer.microsoft.com/api/stac/v1")
 
 source("nasa-gibs", "NASA GIBS daily imagery", BASEMAPS,
@@ -144,6 +148,59 @@ source("nasa-firms", "NASA FIRMS active fires", HAZARDS,
        description="VIIRS and MODIS active fire detections, last 1-10 days.",
        commands=["fetch_active_fires"],
        docs="https://firms.modaps.eosdis.nasa.gov/api/")
+
+source("esa-worldcover", "ESA WorldCover 2021 land cover", LAND,
+       licence="CC BY 4.0",
+       description="Eleven land cover classes at 10 m, streamed from the public AWS bucket.",
+       commands=["add_dataset", "summarise_land_cover", "export_area_report"],
+       docs="https://esa-worldcover.org/",
+       attribution="© ESA WorldCover project 2021")
+
+source("soilgrids", "SoilGrids 2.0 (ISRIC)", LAND,
+       licence="CC BY 4.0",
+       description="Clay, sand, silt, pH, organic carbon, nitrogen, bulk density at six depths, 250 m.",
+       commands=["get_soil_properties", "attach_soil_to_layer", "export_area_report"],
+       docs="https://www.isric.org/explore/soilgrids",
+       attribution="ISRIC World Soil Information")
+
+source("open-meteo-flood", "Open-Meteo flood (GloFAS)", WEATHER,
+       licence="CC BY 4.0",
+       description="River discharge forecast up to 7 months and history, 5 km grid.",
+       commands=["get_river_discharge"],
+       docs="https://open-meteo.com/en/docs/flood-api")
+
+source("open-meteo-marine", "Open-Meteo marine", WEATHER,
+       licence="CC BY 4.0",
+       description="Wave height, period, direction and sea surface temperature.",
+       commands=["get_marine_conditions"],
+       docs="https://open-meteo.com/en/docs/marine-weather-api")
+
+source("geoboundaries", "geoBoundaries", VECTOR,
+       licence="Public domain or CC BY per country",
+       description="Administrative boundaries ADM0 to ADM5 for every country.",
+       commands=["add_admin_boundaries"],
+       docs="https://www.geoboundaries.org/",
+       attribution="geoBoundaries (Runfola et al.)")
+
+source("gbif", "GBIF species occurrences", BIODIVERSITY,
+       licence="CC0 / CC BY per dataset",
+       description="Two billion species observation records, searchable by area and taxon.",
+       commands=["fetch_species_occurrences"],
+       docs="https://techdocs.gbif.org/en/openapi/",
+       attribution="GBIF.org")
+
+source("sensor-community", "Sensor.Community air sensors", SENSORS,
+       licence="ODbL",
+       description="Live PM2.5, PM10, temperature, humidity and pressure from citizen sensors.",
+       commands=["fetch_air_sensors"],
+       docs="https://sensor.community/en/")
+
+source("gdacs", "GDACS disaster alerts", HAZARDS,
+       licence="Free for non commercial use",
+       description="Earthquakes, cyclones, floods, droughts, volcanoes and wildfires with alert levels.",
+       commands=["fetch_disaster_alerts"],
+       docs="https://www.gdacs.org/",
+       attribution="GDACS (EC JRC / UN OCHA)")
 
 source("copernicus-dem", "Copernicus DEM GLO-30", ELEVATION,
        licence="Copernicus DEM licence (free, attribution)",

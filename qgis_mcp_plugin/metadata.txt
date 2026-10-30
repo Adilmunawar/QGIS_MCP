@@ -1,7 +1,7 @@
 [general]
 name=QGIS MCP Bridge
 description=Open data toolbox for QGIS with a Data Explorer for live satellite imagery, weather, elevation and OpenStreetMap data, and a permission gated MCP bridge so Claude and other AI agents can drive QGIS
-version=4.1.0
+version=4.2.0
 qgisMinimumVersion=3.22
 qgisMaximumVersion=4.99
 supportsQt6=True
@@ -15,7 +15,8 @@ tracker=https://github.com/adilmunawar/qgis_mcp/issues
 repository=https://github.com/adilmunawar/qgis_mcp
 experimental=False
 hasProcessingProvider=no
-changelog=4.1.0 - Data Explorer dashboard with AOI picker and background tasks. Live data connectors: Sentinel-2/Landsat via STAC, spectral indices, Copernicus DEM, Open-Meteo and NASA POWER weather, Nominatim geocoding, Overpass OSM, USGS earthquakes, NASA FIRMS, GIBS basemaps.
+changelog=4.2.0 - Toolbox release: Land and Soil, Water, Boundaries and Species and Analysis tabs; ESA WorldCover, Esri land use, JRC surface water, NASADEM, SoilGrids, GloFAS, marine, geoBoundaries, GBIF, Sensor.Community, GDACS; change detection, zonal statistics, temporal series, HTML area report. 96 MCP tools.
+ 4.1.0 - Data Explorer dashboard with AOI picker and background tasks. Live data connectors: Sentinel-2/Landsat via STAC, spectral indices, Copernicus DEM, Open-Meteo and NASA POWER weather, Nominatim geocoding, Overpass OSM, USGS earthquakes, NASA FIRMS, GIBS basemaps.
  4.0.0 - Permission profiles, approval queue, audit log, pairing token, 60 commands.
 
 [about]

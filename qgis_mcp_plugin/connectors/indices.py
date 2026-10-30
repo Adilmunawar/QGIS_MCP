@@ -299,6 +299,27 @@ def compute(item, bbox, index=None, expression=None, mask_clouds=True,
     }
 
 
+def align_to(array, transform, projection, target_transform, target_projection, shape):
+    """Resample ``array`` onto another grid (used to difference two scenes)."""
+    rows, cols = array.shape
+    src = gdal.GetDriverByName("MEM").Create("", cols, rows, 1, gdal.GDT_Float32)
+    src.SetGeoTransform(transform)
+    src.SetProjection(projection)
+    band = src.GetRasterBand(1)
+    band.SetNoDataValue(-9999.0)
+    band.WriteArray(np.where(np.isfinite(array), array, -9999.0).astype("float32"))
+    t_rows, t_cols = shape
+    gt = target_transform
+    bounds = [gt[0], gt[3] + gt[5] * t_rows, gt[0] + gt[1] * t_cols, gt[3]]
+    out = gdal.Warp("", src, options=gdal.WarpOptions(
+        format="MEM", dstSRS=target_projection, outputBounds=bounds,
+        width=t_cols, height=t_rows, resampleAlg="bilinear",
+        srcNodata=-9999.0, dstNodata=-9999.0))
+    data = out.GetRasterBand(1).ReadAsArray().astype("float32")
+    data[data == -9999.0] = np.nan
+    return data
+
+
 def write_geotiff(path, array, transform, projection, nodata=-9999.0):
     directory = os.path.dirname(os.path.abspath(path))
     os.makedirs(directory, exist_ok=True)

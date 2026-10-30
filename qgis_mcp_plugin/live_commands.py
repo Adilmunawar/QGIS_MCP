@@ -31,7 +31,7 @@ _SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 
 
 def cache_dir():
-    path = os.path.join(QgsApplication.qgisSettingsDirPath(), CACHE_DIRNAME)
+    path = os.path.normpath(os.path.join(QgsApplication.qgisSettingsDirPath(), CACHE_DIRNAME))
     os.makedirs(path, exist_ok=True)
     return path
 

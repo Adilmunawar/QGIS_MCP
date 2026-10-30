@@ -26,7 +26,7 @@ from qgis_mcp_plugin.explorer import ExplorerDock, OSM_PRESETS  # noqa: E402
 
 check = _bootstrap.Checker()
 ONLINE = "--online" in sys.argv
-SHOTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "projects")
+SHOTS = os.environ.get("QGIS_MCP_SHOTS") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "projects")
 
 STAC_ITEM = {
     "id": "S2A_42RYU_20261028_0_L2A", "collection": "sentinel-2-l2a",
@@ -85,10 +85,11 @@ def pump(seconds=30):
 
 
 dock = ExplorerDock(iface=None)
-dock.resize(520, 900)
+dock.resize(560, 940)
+app.setFont(__import__("qgis.PyQt.QtGui", fromlist=["QFont"]).QFont("Segoe UI", 9))
 dock.show()
 app.processEvents()
-check("dock builds with 8 tabs", dock.tabs.count() == 8, dock.tabs.count())
+check("dock builds with 12 tabs", dock.tabs.count() == 12, dock.tabs.count())
 check("sources table populated", dock.sources_table.rowCount() >= 10)
 check("basemap list populated", dock.basemap_list.count() >= 15)
 check("osm presets populated", dock.osm_preset.count() == len(OSM_PRESETS))

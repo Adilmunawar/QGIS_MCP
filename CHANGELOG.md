@@ -9,6 +9,19 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Planned
 - Sensor feeds (OGC SensorThings, OpenAQ, river gauges), change detection, 3D buildings and point clouds, background jobs with progress. See the roadmap in the README.
 
+## [4.2.0] - Toolbox release
+
+### Added
+- **Data Explorer tabs** `Land and Soil`, `Water`, `Boundaries and Species` and `Analysis` (`qgis_mcp_plugin/explorer_toolbox.py`), so every source and workflow is usable with clicks and no AI client.
+- Connectors: `landcover.py` (ESA WorldCover from its public AWS bucket, Esri annual land use, JRC Global Surface Water and NASADEM through Planetary Computer with signed URLs, class shares in km²), `soil.py` (SoilGrids with USDA texture class), `boundaries.py` (geoBoundaries), `species.py` (GBIF with taxon matching and pagination), `sensors.py` (Sensor.Community), `disasters.py` (GDACS RSS), and GloFAS river discharge, marine and elevation functions in `weather.py`.
+- 16 new commands and MCP tools (96 total): `list_datasets`, `add_dataset`, `summarise_land_cover`, `get_soil_properties`, `attach_soil_to_layer`, `get_river_discharge`, `get_marine_conditions`, `get_elevation`, `add_admin_boundaries`, `fetch_species_occurrences`, `fetch_air_sensors`, `fetch_disaster_alerts`, `compute_index_change`, `zonal_index_statistics`, `add_imagery_series`, `export_area_report`.
+- Analysis workflows: change detection with diverging styling and loss and gain classes; per polygon statistics through `QgsZonalStatistics`; dated scene groups with temporal ranges for the Temporal Controller; an HTML area report.
+- `tests/test_toolbox_headless.py` (40 offline checks) and dashboard screenshots with real fonts under `docs/images/`.
+
+### Changed
+- Dataset mosaics are clipped through a warped VRT, so projected tiles (UTM land use) and geographic tiles both work; pixel areas are computed for either grid.
+- `pyproject.toml`, `metadata.txt` and the plugin report version 4.2.0.
+
 ## [4.1.0] - Live data release
 
 ### Added

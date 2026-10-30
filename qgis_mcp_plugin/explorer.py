@@ -38,6 +38,7 @@ from qgis.PyQt.QtWidgets import (
 from . import aoi as aoi_mod
 from .connectors import (basemaps, geocode, hazards, indices, osm, registry,
                          stac, weather)
+from .explorer_toolbox import ToolboxTabsMixin
 from .live_commands import (
     LiveDataMixin, _memory_layer_from_features, _safe_name, _split_by_geometry,
     cache_dir,
@@ -111,7 +112,7 @@ class ExplorerTask(QgsTask):
             self._on_error(f"{self.description()}: failed", "")
 
 
-class ExplorerDock(QDockWidget):
+class ExplorerDock(ToolboxTabsMixin, QDockWidget):
     """The Data Explorer panel."""
 
     closed = pyqtSignal()
@@ -154,6 +155,7 @@ class ExplorerDock(QDockWidget):
         self.tabs.addTab(self._build_elevation_tab(), "Elevation")
         self.tabs.addTab(self._build_osm_tab(), "OpenStreetMap")
         self.tabs.addTab(self._build_hazards_tab(), "Hazards")
+        self._build_toolbox_tabs()
         self.tabs.addTab(self._build_basemaps_tab(), "Basemaps")
         self.tabs.addTab(self._build_sources_tab(), "Sources")
         self.tabs.addTab(self._build_log_tab(), "Log")

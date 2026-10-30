@@ -97,7 +97,7 @@ def collection_id(alias, catalogue):
 
 def search(aoi_bbox, collection="sentinel-2-l2a", start=None, end=None,
            max_cloud=None, limit=10, catalogue="earth-search",
-           intersects=None):
+           intersects=None, keep_assets=False):
     """Return STAC items as compact dicts, least cloudy first when relevant."""
     base = catalogue_url(catalogue)
     cid, spec = collection_id(collection, catalogue)
@@ -117,7 +117,7 @@ def search(aoi_bbox, collection="sentinel-2-l2a", start=None, end=None,
     else:
         body["sortby"] = [{"field": "properties.datetime", "direction": "desc"}]
     response = net.post_json(f"{base}/search", body)
-    items = [summarise_item(f, catalogue) for f in response.get("features", [])]
+    items = [summarise_item(f, catalogue, keep_assets) for f in response.get("features", [])]
     return {
         "catalogue": catalogue,
         "collection": cid,
@@ -128,11 +128,12 @@ def search(aoi_bbox, collection="sentinel-2-l2a", start=None, end=None,
     }
 
 
-def summarise_item(feature, catalogue="earth-search"):
+def summarise_item(feature, catalogue="earth-search", keep_assets=False):
     props = feature.get("properties", {})
     assets = feature.get("assets", {})
     bbox = feature.get("bbox")
-    return {
+    extra = {"raw_assets": assets} if keep_assets else {}
+    return {**extra,
         "id": feature.get("id"),
         "collection": feature.get("collection"),
         "catalogue": catalogue,

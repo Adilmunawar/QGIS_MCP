@@ -12,6 +12,9 @@ from .. import net
 FORECAST = "https://api.open-meteo.com/v1/forecast"
 ARCHIVE = "https://archive-api.open-meteo.com/v1/archive"
 AIR_QUALITY = "https://air-quality-api.open-meteo.com/v1/air-quality"
+FLOOD = "https://flood-api.open-meteo.com/v1/flood"
+MARINE = "https://marine-api.open-meteo.com/v1/marine"
+ELEVATION = "https://api.open-meteo.com/v1/elevation"
 POWER_DAILY = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
 CURRENT_DEFAULT = ["temperature_2m", "relative_humidity_2m", "precipitation",
@@ -133,6 +136,55 @@ def air_quality(points, variables=None, timezone="auto"):
     return [{"lon": lon, "lat": lat, "units": e.get("current_units"),
              "current": e.get("current")}
             for (lon, lat), e in zip(points, _as_list(data))]
+
+
+def river_discharge(points, days=7, past_days=30):
+    """GloFAS river discharge (m3/s) forecast and recent history per point."""
+    lats, lons = _points_param(points)
+    data = net.get_json(FLOOD, {
+        "latitude": lats, "longitude": lons,
+        "daily": ["river_discharge", "river_discharge_mean", "river_discharge_max"],
+        "forecast_days": max(1, min(int(days), 210)),
+        "past_days": max(0, min(int(past_days), 92)),
+    })
+    today = _dt.date.today().isoformat()
+    rows = []
+    for (lon, lat), entry in zip(points, _as_list(data)):
+        daily = _columns_to_rows(entry.get("daily")) or []
+        values = [r["river_discharge"] for r in daily if r.get("river_discharge") is not None]
+        todays = next((r["river_discharge"] for r in daily if r.get("time") == today), None)
+        rows.append({"lon": lon, "lat": lat, "units": entry.get("daily_units"),
+                     "daily": daily,
+                     "today": todays,
+                     "latest_forecast": values[-1] if values else None,
+                     "max_in_window": max(values) if values else None})
+    return rows
+
+
+def marine(points, days=3):
+    """Waves, swell and sea surface temperature for coastal or offshore points."""
+    lats, lons = _points_param(points)
+    data = net.get_json(MARINE, {
+        "latitude": lats, "longitude": lons,
+        "current": ["wave_height", "wave_direction", "wave_period",
+                    "sea_surface_temperature", "ocean_current_velocity"],
+        "daily": ["wave_height_max", "wave_direction_dominant", "wave_period_max"],
+        "forecast_days": max(1, min(int(days), 8)),
+        "timezone": "auto",
+    })
+    return [{"lon": lon, "lat": lat, "units": e.get("current_units"),
+             "current": e.get("current"), "daily_units": e.get("daily_units"),
+             "daily": _columns_to_rows(e.get("daily"))}
+            for (lon, lat), e in zip(points, _as_list(data))]
+
+
+def elevation(points):
+    """Elevation in metres (Copernicus DEM 90 m) for up to 100 points."""
+    lats, lons = _points_param(points)
+    data = net.get_json(ELEVATION, {"latitude": lats, "longitude": lons})
+    values = data.get("elevation") or []
+    return [{"lon": lon, "lat": lat, "elevation_m": v}
+            for (lon, lat), v in zip(points, values)]
 
 
 def power_daily(lon, lat, start_date, end_date, parameters=None,

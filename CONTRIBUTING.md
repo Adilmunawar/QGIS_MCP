@@ -50,6 +50,7 @@ Tests are headless and run in QGIS's own Python. On Windows:
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_lifecycle_headless.py
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_live_data_headless.py
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_explorer_headless.py
+"C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_toolbox_headless.py
 ```
 
 The tests import the plugin from your installed QGIS 4 profile, so make sure the symlink points at your working copy. Please run all four before opening a pull request.
