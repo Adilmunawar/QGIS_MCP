@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Transport, authentication, permission gating and dispatch.
 
 Assembled with the command handlers in ``mcp_server.py``; this module holds
@@ -26,7 +27,7 @@ from .permissions import APPROVE, DENY, PermissionManager, category_for
 
 LOG_TAG = "QGIS MCP"
 PROTOCOL_VERSION = 3
-PLUGIN_VERSION = "4.4.0"
+PLUGIN_VERSION = "4.5.0"
 PROJECT_NAME = "QGIS MCP toolbox"
 PROJECT_AUTHOR = "Adil Munawar"
 PROJECT_URL = "https://github.com/Adilmunawar/QGIS_MCP"

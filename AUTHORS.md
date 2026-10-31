@@ -15,7 +15,7 @@ documentation and the test suites.
 The repository began as a fork of the MCP bridge by
 [jjsantos01](https://github.com/jjsantos01/qgis_mcp) (MIT License). The
 original socket bridge and the first project and layer commands came from
-that work; they are acknowledged in `LICENSE` and `NOTICE`.
+that work; they are acknowledged in `LICENSE-MIT-upstream` and `NOTICE`.
 
 ## Contributors
 

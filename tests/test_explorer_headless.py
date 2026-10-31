@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Offscreen tests for the Data Explorer dock.
 
 Builds the dock without a QGIS main window, drives it with stubbed network

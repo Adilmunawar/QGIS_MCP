@@ -7,9 +7,10 @@ catalogue, indices, monitor), the toolbox, advanced and sensor command sets,
 the permission system, the panel and the test suites are original work by
 Adil Munawar.
 
-The project started from the MCP bridge by jjsantos01
-(https://github.com/jjsantos01/qgis_mcp), used under the MIT License. The MIT
-notice for those portions is kept in the LICENSE file.
+The project is licensed under the GNU General Public License version 3 or
+later (see LICENSE). It started from the MCP bridge by jjsantos01
+(https://github.com/jjsantos01/qgis_mcp), used under the MIT License; that
+notice is kept in LICENSE-MIT-upstream.
 
 Attribution requirements
 ------------------------

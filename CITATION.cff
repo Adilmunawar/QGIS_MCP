@@ -8,9 +8,9 @@ authors:
     email: adilmunawarx@gmail.com
 repository-code: "https://github.com/Adilmunawar/QGIS_MCP"
 url: "https://github.com/Adilmunawar/QGIS_MCP"
-version: 4.4.0
+version: 4.5.0
 date-released: 2026-10-31
-license: MIT
+license: GPL-3.0-or-later
 keywords:
   - QGIS
   - remote sensing

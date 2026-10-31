@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Data Explorer Sensors tab (gauges, buoys, tides, aircraft, SensorThings),
 the 3D Tiles box on the 3D tab and the population button on Land and Soil.
 

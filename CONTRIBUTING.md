@@ -88,4 +88,4 @@ Use [GitHub Issues](https://github.com/adilmunawar/qgis_mcp/issues) and the temp
 
 ## Credits
 
-This project is a fork of [jjsantos01/qgis_mcp](https://github.com/jjsantos01/qgis_mcp), itself inspired by [BlenderMCP](https://github.com/ahujasid/blender-mcp). Contributions are licensed under the MIT License.
+This project is a fork of [jjsantos01/qgis_mcp](https://github.com/jjsantos01/qgis_mcp), itself inspired by [BlenderMCP](https://github.com/ahujasid/blender-mcp). Contributions are licensed under the GNU General Public License v3 or later, like the rest of the project (see `LICENSE` and `NOTICE`).

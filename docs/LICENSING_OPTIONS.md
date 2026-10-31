@@ -1,5 +1,8 @@
 # Licensing options for QGIS MCP
 
+**Decision (2026-10-31): option A was adopted. The project is GPL-3.0-or-later
+from version 4.5.0; the rest of this page is kept as the record of the choice.**
+
 Prepared on 2026-10-31 for the project owner. The repository is MIT today
 (inherited from the upstream bridge by jjsantos01, whose MIT portions stay MIT
 whatever is chosen). The attribution files `NOTICE`, `AUTHORS.md`,

@@ -9,6 +9,16 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Planned
 - Copernicus Data Space, Overture buildings, FAO WaPOR, CHIRPS, more SensorThings presets. See the roadmap in the README.
 
+## [4.5.0] - Licence and attribution release
+
+### Changed
+- **Licence**: the project moves from MIT to **GPL-3.0-or-later** (`LICENSE`), with the upstream MIT notice kept in `LICENSE-MIT-upstream` and an attribution requirement under GPL section 7 recorded in `NOTICE`. Versions before 4.5.0 remain available under MIT.
+- Every source file carries a copyright line and an SPDX identifier; the Data Explorer, the server panel and the MCP server identity show the author and repository.
+
+### Added
+- `NOTICE`, `AUTHORS.md`, `CITATION.cff`, `TRADEMARKS.md` and `docs/LICENSING_OPTIONS.md`.
+- The Overview tab and the Data Explorer toolbar button (see 4.4.0 notes below, shipped between the two releases).
+
 ## [4.4.0] - Sensors release
 
 ### Added

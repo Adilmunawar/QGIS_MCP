@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
+# SPDX-License-Identifier: GPL-3.0-or-later
 """OpenAQ v3 reference grade air quality stations (needs a free API key)."""
 
 import re

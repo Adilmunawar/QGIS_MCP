@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Data Explorer: a click-driven dashboard over the live-data engine.
 
 The same connectors that serve the MCP tools are exposed here as a dock

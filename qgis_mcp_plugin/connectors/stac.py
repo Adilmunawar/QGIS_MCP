@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
+# SPDX-License-Identifier: GPL-3.0-or-later
 """STAC catalogue search and cloud-optimised GeoTIFF access.
 
 Earth Search is the default because its Sentinel-2, Landsat and Copernicus
