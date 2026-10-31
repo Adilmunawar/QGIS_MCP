@@ -37,7 +37,8 @@ from qgis.PyQt.QtGui import QColor
 from qgis.utils import active_plugins
 
 from ._server_core import (
-    DEFAULT_MAX_SCAN, PLUGIN_VERSION, PROTOCOL_VERSION, ServerCore,
+    DEFAULT_MAX_SCAN, PLUGIN_VERSION, PROJECT_AUTHOR, PROJECT_NAME, PROJECT_URL,
+    PROTOCOL_VERSION, ServerCore,
 )
 from . import net
 from .data_commands import DataCommandsMixin
@@ -327,6 +328,10 @@ class QgisMCPServer(SensorsMixin, AdvancedMixin, ToolboxMixin, LiveDataMixin, Da
             "requests_served": self.requests_served,
             "uptime_seconds": self.uptime_seconds(),
             "requires_token": self.require_token,
+            "project": PROJECT_NAME,
+            "author": PROJECT_AUTHOR,
+            "repository": PROJECT_URL,
+            "licence": "GPL-3.0-or-later",
             "permissions": self.permissions.snapshot(),
             "commands": sorted(self._handlers()),
         }
