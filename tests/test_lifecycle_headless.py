@@ -141,7 +141,9 @@ def main():
     pump()
     check("initGui adds the panel and Data Explorer menu entries",
           len(iface.menu_actions) == 2, iface.menu_actions)
-    check("initGui adds a toolbar widget", len(iface.toolbar_widgets) == 1)
+    check("initGui adds two toolbar widgets (Data Explorer first)", len(iface.toolbar_widgets) == 2
+          and iface.toolbar_widgets[0].defaultAction().text() == "Data Explorer",
+          [w.defaultAction().text() for w in iface.toolbar_widgets])
     check("initGui adds a status bar widget", len(iface.status.widgets) == 1)
     check("status widget starts as off",
           "off" in iface.status.widgets[0].text().lower(),

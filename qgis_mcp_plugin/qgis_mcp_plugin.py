@@ -15,7 +15,7 @@ The pieces live in their own modules:
 import os
 
 from qgis.core import QgsApplication, QgsSettings
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu, QToolButton
 
@@ -32,6 +32,8 @@ from ._server_core import PLUGIN_VERSION, PROTOCOL_VERSION
 
 PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
 ICON_PATH = os.path.join(PLUGIN_DIR, "icon.svg")
+EXPLORER_ICON_PATH = os.path.join(PLUGIN_DIR, "icon_explorer.svg")
+SETTINGS_EXPLORER_INTRO = "qgis_mcp/explorer_intro_version"
 
 __all__ = [
     "QgisMCPPlugin", "QgisMCPServer", "QgisMCPDockWidget", "classFactory",
@@ -62,10 +64,25 @@ class QgisMCPPlugin:
     # ------------------------------------------------------------------
     def initGui(self):
         icon = QIcon(ICON_PATH) if os.path.exists(ICON_PATH) else QIcon()
-        self.action = QAction(icon, "QGIS MCP", self.iface.mainWindow())
+        self.action = QAction(icon, "QGIS MCP server panel", self.iface.mainWindow())
         self.action.setCheckable(True)
-        self.action.setToolTip("QGIS MCP - bridge QGIS to an MCP client")
+        self.action.setToolTip("QGIS MCP server panel: start the bridge, permissions, approvals, audit. "
+                               "The data toolbox is the Data Explorer button next to this one.")
         self.action.triggered.connect(self.toggle_dock)
+
+        # The Data Explorer is the toolbox most people come for, so it gets
+        # its own toolbar button, placed first.
+        explorer_icon = QIcon(EXPLORER_ICON_PATH) if os.path.exists(EXPLORER_ICON_PATH) else icon
+        self.explorer_action = QAction(explorer_icon, "Data Explorer", self.iface.mainWindow())
+        self.explorer_action.setCheckable(True)
+        self.explorer_action.setToolTip(
+            "Data Explorer: pick an area and pull satellite imagery, weather, climate, elevation, "
+            "land cover, soil, water, species, sensors, hazards, population and 3D data with clicks")
+        self.explorer_action.triggered.connect(self.toggle_explorer)
+        self.explorer_button = QToolButton()
+        self.explorer_button.setDefaultAction(self.explorer_action)
+        self.explorer_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.iface.addToolBarWidget(self.explorer_button)
 
         # A split button keeps the common actions one click away without
         # forcing the panel open first.
@@ -84,18 +101,21 @@ class QgisMCPPlugin:
         self.iface.addToolBarWidget(self.tool_button)
         self.iface.addPluginToMenu("QGIS MCP", self.action)
 
-        self.explorer_action = QAction(icon, "Data Explorer", self.iface.mainWindow())
-        self.explorer_action.setCheckable(True)
-        self.explorer_action.setToolTip(
-            "Data Explorer - pull satellite, weather, elevation and OpenStreetMap "
-            "data for an area with clicks")
-        self.explorer_action.triggered.connect(self.toggle_explorer)
         menu.addSeparator()
         menu.addAction(self.explorer_action)
         self.iface.addPluginToMenu("QGIS MCP", self.explorer_action)
 
         self._install_status_widget()
         self._refresh_status_widget()
+
+        # First start after an install or upgrade: show the toolbox once, so
+        # nobody has to discover it behind a menu.
+        settings = QgsSettings()
+        window = self.iface.mainWindow()
+        if (settings.value(SETTINGS_EXPLORER_INTRO, "") != PLUGIN_VERSION
+                and window is not None and window.isVisible()):
+            settings.setValue(SETTINGS_EXPLORER_INTRO, PLUGIN_VERSION)
+            QTimer.singleShot(800, self.open_explorer)
 
         if as_bool(QgsSettings().value(SETTINGS_AUTOSTART, False)):
             self._ensure_dock()
@@ -116,6 +136,11 @@ class QgisMCPPlugin:
         if self.explorer_action:
             self.iface.removePluginMenu("QGIS MCP", self.explorer_action)
             self.explorer_action = None
+        button = getattr(self, "explorer_button", None)
+        if button is not None:
+            button.setParent(None)
+            button.deleteLater()
+            self.explorer_button = None
         if self.status_label is not None:
             self.iface.statusBarIface().removeWidget(self.status_label)
             self.status_label.deleteLater()
@@ -163,6 +188,7 @@ class QgisMCPPlugin:
             self.dock.closed.connect(self._dock_closed)
             self.dock.start_requested.connect(self.start_server)
             self.dock.stop_requested.connect(self.stop_server)
+            self.dock.explorer_requested.connect(self.open_explorer)
             if self.server is not None:
                 self.dock.attach(self.server)
         return self.dock
@@ -187,6 +213,16 @@ class QgisMCPPlugin:
             dock.raise_()
         elif self.explorer:
             self.explorer.hide()
+
+    def open_explorer(self):
+        """Show the Data Explorer and keep its toolbar button in step."""
+        if self.explorer_action is not None:
+            self.explorer_action.setChecked(True)
+        self.toggle_explorer(True)
+        if self.iface is not None and self.explorer is not None:
+            self.iface.messageBar().pushInfo(
+                "Data Explorer", "Pick an area of interest at the top, then use the tabs: every "
+                                 "button adds live data to your project, no AI client needed.")
 
     def toggle_dock(self, checked):
         if checked:

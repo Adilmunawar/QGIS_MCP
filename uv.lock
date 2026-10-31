@@ -291,7 +291,7 @@ wheels = [
 
 [[package]]
 name = "qgis-mcp"
-version = "4.3.0"
+version = "4.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },

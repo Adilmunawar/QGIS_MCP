@@ -167,6 +167,7 @@ class QgisMCPDockWidget(QDockWidget):
 
     closed = pyqtSignal()
     start_requested = pyqtSignal()
+    explorer_requested = pyqtSignal()
     stop_requested = pyqtSignal()
 
     MAX_LOG_BLOCKS = 800
@@ -210,13 +211,24 @@ class QgisMCPDockWidget(QDockWidget):
             logo = QLabel()
             logo.setPixmap(QIcon(self.icon_path).pixmap(QSize(30, 30)))
             head.addWidget(logo)
-        title = QLabel("QGIS MCP")
+        title = QLabel("QGIS MCP server")
         title.setStyleSheet("font-size:15px; font-weight:700;")
         head.addWidget(title)
         head.addStretch()
         self.status_pill = QLabel("Stopped")
         head.addWidget(self.status_pill)
         layout.addLayout(head)
+
+        explorer_row = QHBoxLayout()
+        explorer_hint = caption("Looking for the data toolbox? That is the Data Explorer.")
+        self.explorer_button = QPushButton("Open Data Explorer")
+        self.explorer_button.setStyleSheet("font-weight:600;")
+        self.explorer_button.setToolTip("Area of interest, imagery, weather, land, water, species, "
+                                        "sensors, 3D, population and a live monitor, all by clicking")
+        self.explorer_button.clicked.connect(self.explorer_requested.emit)
+        explorer_row.addWidget(explorer_hint, 1)
+        explorer_row.addWidget(self.explorer_button)
+        layout.addLayout(explorer_row)
 
         self.address_label = caption("not listening")
         layout.addWidget(self.address_label)

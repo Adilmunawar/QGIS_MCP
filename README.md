@@ -36,7 +36,7 @@ You do not need Claude, an API key or an MCP client to use this toolbox. The **D
   <img src="docs/images/explorer_11_monitor.png" width="31%" alt="Monitor tab: feeds refreshed on a timer with threshold alerts">
 </p>
 
-**Open it**: `Plugins > QGIS MCP > Data Explorer`, or the arrow next to the QGIS MCP toolbar button.
+**Open it**: the **Data Explorer** toolbar button (globe icon), `Plugins > QGIS MCP > Data Explorer`, or the `Open Data Explorer` button at the top of the QGIS MCP server panel. It also opens by itself the first time QGIS starts after an install or upgrade.
 
 **Choose the area of interest** in any of five ways: type a place name and a radius, press *Draw on map* and drag a rectangle, use the current map view, use a layer's extent, or use the selected features of a layer. The area is outlined in orange on the canvas and remembered between sessions.
 
