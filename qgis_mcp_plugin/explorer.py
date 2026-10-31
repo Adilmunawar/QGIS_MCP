@@ -754,6 +754,10 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
             return
         try:
             data = json.loads(saved)
+            if data.get("source") == "canvas" and self.iface is not None:
+                # A remembered map view is stale by now: follow the map instead.
+                if self._use_map_view_auto():
+                    return
             area = aoi_mod.from_bbox(data["bbox"], source=data.get("source", "bbox"),
                                      label=data.get("label"))
             self.set_aoi(area, announce=False)
@@ -1042,7 +1046,7 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
                           if result.get("change_first_to_last") is not None else ""))
             self.index_result.setText(summary + "\n" + "\n".join(lines))
             chart = charts.chart([((r.get("datetime") or "")[:10], r.get("mean")) for r in result["series"]],
-                                 title=f"{result['index']} over time", width=max(320, self.width() - 60), height=200)
+                                 title=f"{result['index']} over time", width=max(320, self.tabs.width() - 48), height=200)
             self.index_chart.setPixmap(__import__("qgis.PyQt.QtGui", fromlist=["QPixmap"]).QPixmap(chart)
                                        if chart else __import__("qgis.PyQt.QtGui", fromlist=["QPixmap"]).QPixmap())
             self.log(summary, "success")
