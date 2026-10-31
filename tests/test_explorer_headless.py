@@ -99,7 +99,7 @@ def pump(seconds=30):
     deadline = time.time() + seconds
     while time.time() < deadline:
         app.processEvents()
-        if not dock._tasks and dock.progress.format() == "Idle":
+        if not dock._tasks and dock.progress.format().startswith("Idle"):
             # one more spin so finished() callbacks have been delivered
             app.processEvents()
             return True
@@ -112,7 +112,7 @@ dock.resize(560, 940)
 app.setFont(__import__("qgis.PyQt.QtGui", fromlist=["QFont"]).QFont("Segoe UI", 9))
 dock.show()
 app.processEvents()
-check("dock builds with 16 tabs, Overview first", dock.tabs.count() == 16 and dock.tabs.tabText(0) == "Overview" and dock.tabs.currentIndex() == 0, dock.tabs.count())
+check("dock builds with 16 tabs, Overview first", dock.tabs.count() == 16 and dock.tabs.tabText(0) == "Overview", dock.tabs.count())
 check("sensors tab sits before monitor", [dock.tabs.tabText(i) for i in range(dock.tabs.count())][10:13] == ["3D", "Sensors", "Monitor"], [dock.tabs.tabText(i) for i in range(dock.tabs.count())])
 check("sources table populated", dock.sources_table.rowCount() >= 10)
 check("basemap list populated", dock.basemap_list.count() >= 15)
@@ -294,6 +294,33 @@ def stubbed_scenario():
     dock._quick_rain()
     check("overview rainfall finished", pump(60))
     check("overview rainfall rendered", "Last 30 days" in dock.overview_view.toPlainText(), dock.overview_view.toPlainText()[:200])
+
+    # Polish: charts, friendly errors, progress text, remembered tab ------------------------
+    from qgis_mcp_plugin import charts
+    png = charts.chart([("2026-01-01", 0.2), ("2026-02-01", None), ("2026-03-01", 0.6)], "NDVI", "index")
+    check("charts: line chart written", png and os.path.exists(png) and os.path.getsize(png) > 500, png)
+    bars = charts.chart([("d1", 0.0), ("d2", 12.5), ("d3", 3.0)], "Rain", "mm", "bar")
+    check("charts: bar chart written", bars and os.path.exists(bars))
+    check("charts: one point is no chart", charts.chart([("x", 1.0)]) is None)
+    check("charts: img tag", charts.img_tag(png, 400).startswith("<p><img src='file:"))
+    check("friendly: 503 names the host",
+          dock._friendly("HTTP 503 for https://rest.isric.org/soilgrids/v2.0/properties/query?lon=1") ==
+          "rest.isric.org is temporarily unavailable (HTTP 503); try again in a few minutes.",
+          dock._friendly("HTTP 503 for https://rest.isric.org/soilgrids/v2.0/properties/query?lon=1"))
+    check("friendly: 429 and timeouts", "rate limiting" in dock._friendly("HTTP 429 for https://a.b/c")
+          and "took too long" in dock._friendly("Error transferring https://x.y/z - request timed out"))
+    check("friendly: other text untouched", dock._friendly("No scenes in that window") == "No scenes in that window")
+    check("progress idle text shows the last duration or Idle", dock.progress.format().startswith("Idle"))
+    check("time series chart label present", hasattr(dock, "index_chart"))
+    dock.tabs.setCurrentIndex(3)
+    check("tab remembered in settings", int(dock._settings.value("qgis_mcp/explorer_tab", -1)) == 3)
+    dock.tabs.setCurrentIndex(0)
+    check("auto area off without a canvas", dock._aoi_auto is False and dock._use_map_view_auto() is False)
+    # the weather tab draws charts for history rows
+    dock.weather_kind.setCurrentIndex(3)
+    dock._get_weather()
+    check("history finished", pump(60))
+    check("history view rendered without daily rows", "Multan" in dock.weather_view.toPlainText(), dock.weather_view.toPlainText()[:120])
 
     # Screenshots -----------------------------------------------------------------------
     os.makedirs(SHOTS, exist_ok=True)

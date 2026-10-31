@@ -26,7 +26,7 @@ from qgis.core import (
     QgsRasterLayer, QgsRectangle, QgsSettings, QgsTask, QgsWkbTypes,
 )
 from qgis.gui import QgsMapLayerComboBox, QgsMapToolExtent, QgsRubberBand
-from qgis.PyQt.QtCore import QDate, Qt, pyqtSignal
+from qgis.PyQt.QtCore import QDate, QElapsedTimer, Qt, QTimer, pyqtSignal
 from qgis.PyQt.QtGui import QColor, QIcon
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDateEdit, QDockWidget,
@@ -38,6 +38,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from . import aoi as aoi_mod
+from . import charts
 from .connectors import (basemaps, geocode, hazards, indices, osm, registry,
                          stac, weather)
 from .explorer_advanced import AdvancedTabsMixin
@@ -133,6 +134,13 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         self._extent_tool = None
         self._scenes = []
         self._closed = False
+        self._aoi_auto = False
+        self._follow_connected = False
+        self._elapsed = QElapsedTimer()
+        self._running = None
+        self._tick = QTimer(self)
+        self._tick.setInterval(1000)
+        self._tick.timeout.connect(self._update_progress_text)
         from .mcp_server import QgisMCPServer
         from .permissions import MASTER, PermissionManager
         # Never started: used only for its layer helpers on the GUI thread.
@@ -167,7 +175,11 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         self.tabs.addTab(self._build_sources_tab(), "Sources")
         self.tabs.addTab(self._build_log_tab(), "Log")
         self.tabs.insertTab(0, self._build_overview_tab(), "Overview")
-        self.tabs.setCurrentIndex(0)
+        try:
+            self.tabs.setCurrentIndex(int(self._settings.value("qgis_mcp/explorer_tab", 0)))
+        except (TypeError, ValueError):
+            self.tabs.setCurrentIndex(0)
+        self.tabs.currentChanged.connect(lambda i: self._settings.setValue("qgis_mcp/explorer_tab", i))
         outer.addWidget(self.tabs, 1)
 
         status = QHBoxLayout()
@@ -326,6 +338,9 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         self.index_result = QLabel("")
         self.index_result.setWordWrap(True)
         layout.addWidget(self.index_result)
+        self.index_chart = QLabel("")
+        self.index_chart.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(self.index_chart)
         return widget
 
     def _build_weather_tab(self):
@@ -568,8 +583,34 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         elif level == "success" and self.iface is not None:
             self.iface.messageBar().pushSuccess("Data Explorer", text[:200])
 
+    @staticmethod
+    def _friendly(text):
+        """Turn an HTTP or network failure into a sentence a person can act on."""
+        import re
+        text = str(text)
+        host = re.search(r"https?://([^/\s]+)", text)
+        who = host.group(1) if host else "the service"
+        status = re.search(r"HTTP (\d{3})", text)
+        code = int(status.group(1)) if status else None
+        if code in (502, 503, 504):
+            return f"{who} is temporarily unavailable (HTTP {code}); try again in a few minutes."
+        if code == 429:
+            return f"{who} is rate limiting requests (HTTP 429); wait a minute, then retry."
+        if code in (401, 403):
+            return f"{who} refused the request (HTTP {code}); a key may be missing or invalid (Sources tab)."
+        if code == 404:
+            return f"{who} has nothing at that address (HTTP 404)."
+        if "timed out" in text.lower() or "timeout" in text.lower():
+            return f"{who} took too long to answer; try a smaller area or try again later."
+        if "Every Overpass mirror failed" in text:
+            return "All public Overpass mirrors are busy or down; wait a minute and retry, or narrow the area."
+        return text
+
     def _error(self, text, trace=""):
-        self.log(text, "error")
+        friendly = self._friendly(text)
+        self.log(friendly, "error")
+        if friendly != str(text):
+            self.log_view.appendPlainText(f"    detail: {str(text)[:300]}")
         if trace:
             self.log_view.appendPlainText(trace.rstrip())
         self._task_done()
@@ -585,10 +626,17 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         self._tasks.append(task)
         self.progress.setRange(0, 0)
         self.progress.setFormat(description)
+        self._running = description
+        self._elapsed.start()
+        self._tick.start()
         self.cancel_button.setEnabled(True)
         self.log(f"Started: {description}")
         QgsApplication.taskManager().addTask(task)
         return task
+
+    def _update_progress_text(self):
+        if self._running and self._tasks:
+            self.progress.setFormat(f"{self._running}   {self._elapsed.elapsed() // 1000} s")
 
     def _wrap_apply(self, apply):
         def inner(result):
@@ -602,9 +650,12 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         self._tasks = [t for t in self._tasks
                        if t.status() in (QgsTask.TaskStatus.Queued, QgsTask.TaskStatus.Running)]
         if not self._tasks:
+            self._tick.stop()
+            took = self._elapsed.elapsed() / 1000 if self._running else 0
+            self._running = None
             self.progress.setRange(0, 1)
             self.progress.setValue(1)
-            self.progress.setFormat("Idle")
+            self.progress.setFormat("Idle" + (f"  (last task {took:.0f} s)" if took >= 1 else ""))
             self.cancel_button.setEnabled(False)
 
     def _cancel_tasks(self):
@@ -635,22 +686,59 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
     # ==================================================================
     # AOI
     # ==================================================================
-    def set_aoi(self, area, announce=True):
+    def set_aoi(self, area, announce=True, auto=False):
+        """Make ``area`` the area of interest.
+
+        ``auto`` marks an area taken from the map view without the user
+        choosing one: it follows the map as it pans until an area is picked,
+        and it is not outlined, since it would cover the whole view.
+        """
         self._aoi = area
+        self._aoi_auto = auto
         w_km = area.rect.width() * 111.32 * max(
             0.05, abs(math.cos(math.radians(area.center[1]))))
         h_km = area.rect.height() * 110.54
-        label = area.label or f"{area.source} area"
+        if auto:
+            label = "Current map view (follows the map until you pick an area)"
+        else:
+            label = area.label or {"canvas": "Map view", "layer": "Layer extent",
+                                   "selection": "Selected features", "drawn": "Drawn rectangle"}.get(
+                area.source, f"{area.source} area")
         self.aoi_label.setText(
             f"{label}\n{w_km:.1f} x {h_km:.1f} km  |  centre "
             f"{area.center[1]:.4f}, {area.center[0]:.4f}  |  bbox "
             f"{', '.join(f'{v:.4f}' for v in area.bbox)}")
-        self.aoi_label.setStyleSheet("")
-        self._draw_rubber(area)
-        self._settings.setValue("qgis_mcp/explorer_aoi", json.dumps(area.to_dict()))
+        self.aoi_label.setStyleSheet("color: palette(mid);" if auto else "")
+        if auto:
+            if self._rubber is not None:
+                self._rubber.reset(QgsWkbTypes.GeometryType.PolygonGeometry)
+        else:
+            self._draw_rubber(area)
+            self._settings.setValue("qgis_mcp/explorer_aoi", json.dumps(area.to_dict()))
         if announce:
             self._clear_scenes()
             self.log(f"AOI set from {area.source}: {label}")
+
+    def _follow_map_view(self):
+        """Keep an automatic area in step with the map; a chosen area stays."""
+        if self._closed or not self._aoi_auto or self.iface is None:
+            return
+        try:
+            self.set_aoi(aoi_mod.from_canvas(self.iface), announce=False, auto=True)
+        except Exception:
+            pass
+
+    def _use_map_view_auto(self):
+        if self.iface is None:
+            return False
+        try:
+            self.set_aoi(aoi_mod.from_canvas(self.iface), announce=False, auto=True)
+        except Exception:
+            return False
+        if not self._follow_connected:
+            self.iface.mapCanvas().extentsChanged.connect(self._follow_map_view)
+            self._follow_connected = True
+        return True
 
     def _clear_scenes(self):
         self._scenes = []
@@ -662,12 +750,7 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         if not saved:
             # Nothing chosen yet: the current map view is the obvious area,
             # so every button works from the first click.
-            if self.iface is not None:
-                try:
-                    self.set_aoi(aoi_mod.from_canvas(self.iface), announce=False)
-                    self.aoi_label.setText(self.aoi_label.text().replace("canvas area", "Current map view"))
-                except Exception:
-                    pass
+            self._use_map_view_auto()
             return
         try:
             data = json.loads(saved)
@@ -679,11 +762,14 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
 
     def _clear_aoi(self):
         self._aoi = None
+        self._aoi_auto = False
         self.aoi_label.setText("No area selected. Find a place, draw, or use the map view.")
         self.aoi_label.setStyleSheet("color: palette(mid);")
         if self._rubber is not None:
             self._rubber.reset(QgsWkbTypes.GeometryType.PolygonGeometry)
         self._settings.remove("qgis_mcp/explorer_aoi")
+        # Back to following the map, so the buttons keep working.
+        self._use_map_view_auto()
 
     def _draw_rubber(self, area):
         if self.iface is None:
@@ -955,8 +1041,11 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
                        + (f", change {result['change_first_to_last']:+.3f}"
                           if result.get("change_first_to_last") is not None else ""))
             self.index_result.setText(summary + "\n" + "\n".join(lines))
-            self.log(summary + "\n" + "\n".join(lines), "success")
-            self.tabs.setCurrentIndex(self.tabs.count() - 1)
+            chart = charts.chart([((r.get("datetime") or "")[:10], r.get("mean")) for r in result["series"]],
+                                 title=f"{result['index']} over time", width=max(320, self.width() - 60), height=200)
+            self.index_chart.setPixmap(__import__("qgis.PyQt.QtGui", fromlist=["QPixmap"]).QPixmap(chart)
+                                       if chart else __import__("qgis.PyQt.QtGui", fromlist=["QPixmap"]).QPixmap())
+            self.log(summary, "success")
 
         self._run(f"Time series of {index}", work, apply)
 
@@ -986,7 +1075,22 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
             return weather.power_daily(lon, lat, start, end)
 
         def apply(result):
-            self.weather_view.setHtml(self._weather_html(kind, result, area))
+            html_text = self._weather_html(kind, result, area)
+            rows = result.get("daily") if kind in ("forecast", "history") else result.get("rows")
+            if rows:
+                key = "time" if kind in ("forecast", "history") else "date"
+                temp_col = "temperature_2m_max" if kind in ("forecast", "history") else "T2M_MAX"
+                rain_col = "precipitation_sum" if kind in ("forecast", "history") else "PRECTOTCORR"
+                width = max(320, self.weather_view.viewport().width() - 24)
+                images = ""
+                if any(r.get(temp_col) is not None for r in rows):
+                    images += charts.img_tag(charts.chart([(r.get(key), r.get(temp_col)) for r in rows],
+                                                          "Daily maximum temperature", "°C", "line", width, 200), width)
+                if any(r.get(rain_col) is not None for r in rows):
+                    images += charts.img_tag(charts.chart([(r.get(key), r.get(rain_col)) for r in rows],
+                                                          "Daily rain", "mm", "bar", width, 180), width)
+                html_text = html_text.replace("</h3>", "</h3>" + images, 1)
+            self.weather_view.setHtml(html_text)
             self.log(f"Weather ({kind}) fetched for {area.label or 'area centre'}", "success")
 
         self._run(f"Fetching weather ({kind})", work, apply)
@@ -1341,6 +1445,13 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
 
     def cleanup(self):
         self._closed = True
+        self._tick.stop()
+        if self._follow_connected and self.iface is not None:
+            try:
+                self.iface.mapCanvas().extentsChanged.disconnect(self._follow_map_view)
+            except TypeError:
+                pass
+            self._follow_connected = False
         timer = getattr(self, '_monitor_timer', None)
         if timer is not None:
             timer.stop()

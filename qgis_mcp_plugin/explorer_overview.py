@@ -18,6 +18,7 @@ from qgis.PyQt.QtWidgets import (
     QGridLayout, QGroupBox, QLabel, QPushButton, QTextBrowser, QVBoxLayout, QWidget,
 )
 
+from . import charts
 from .connectors import landcover, soil, stac, weather
 from .explorer_toolbox import _table
 from .live_commands import LiveDataMixin
@@ -64,11 +65,8 @@ class OverviewTabsMixin:
 
     def _area_or_view(self):
         """The chosen area, else the current map view."""
-        if self._aoi is None and self.iface is not None:
-            try:
-                self._aoi_from_canvas()
-            except Exception:
-                pass
+        if self._aoi is None:
+            self._use_map_view_auto()
         return self._require_aoi()
 
     # ------------------------------------------------------------------
@@ -270,7 +268,12 @@ class OverviewTabsMixin:
             rain = s.get("precipitation_sum") or {}
             tmax = s.get("temperature_2m_max") or {}
             wet_days = sum(1 for r in daily if (r.get("precipitation_sum") or 0) > 0.5)
+            width = max(320, self.overview_view.viewport().width() - 24)
             parts = [f"<h3>Last 30 days at {lat:.3f}, {lon:.3f}</h3>",
+                     charts.img_tag(charts.chart([(r.get("time"), r.get("precipitation_sum")) for r in daily],
+                                                 "Daily rain", "mm", "bar", width, 180), width),
+                     charts.img_tag(charts.chart([(r.get("time"), r.get("temperature_2m_max")) for r in daily],
+                                                 "Daily maximum temperature", "°C", "line", width, 180), width),
                      f"<p>Rain total <b>{rain.get('sum') or 0:.1f} mm</b> on {wet_days} days; "
                      f"hottest day {tmax.get('max')} °C, mean maximum {tmax.get('mean')} °C</p>",
                      _table(daily, ["time", "temperature_2m_max", "temperature_2m_min", "precipitation_sum", "et0_fao_evapotranspiration"])

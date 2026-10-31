@@ -11,6 +11,9 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 
 ## [4.6.0] - Source available licence
 
+### Added
+- Data Explorer polish: the area of interest follows the map view until you pick one (and goes back to following when cleared); the progress bar counts seconds and reports how long the last task took; network failures are translated into plain sentences naming the service; the last tab is remembered; the index time series, weather forecast, history and NASA POWER results and the 30 day rainfall card draw line and bar charts (`qgis_mcp_plugin/charts.py`).
+
 ### Changed
 - **Licence**: the project moves to the **QGIS MCP Toolbox Source Available License 1.0** (`LICENSE`). Personal, study, openly published research and 30 day evaluation use are free; use in or for an organisation and any redistribution or public fork need the author's written permission. Version 4.5.0 stays GPL-3.0-or-later and versions up to 4.4.0 stay MIT; the upstream MIT notice is kept. The plugin is distributed from this repository's releases, not the official QGIS plugin repository.
 - SPDX headers, `metadata.txt`, `pyproject.toml`, `CITATION.cff`, `NOTICE`, the README and `docs/ENFORCEMENT.md` follow the new licence.

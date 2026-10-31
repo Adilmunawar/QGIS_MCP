@@ -4,8 +4,9 @@ This project started from the MCP bridge by jjsantos01
 (https://github.com/jjsantos01/qgis_mcp). The portions that originate there
 were received under the MIT License reproduced below, and that notice is kept
 as the MIT License requires. The project as a whole, including all work by
-Adil Munawar, is distributed under the GNU General Public License version 3
-or later (see LICENSE), which permits including MIT licensed code.
+Adil Munawar, is distributed under the QGIS MCP Toolbox Source Available
+License 1.0 (see LICENSE); the MIT License permits including those portions
+in it, and they remain available under MIT on their own.
 
 MIT License
 
