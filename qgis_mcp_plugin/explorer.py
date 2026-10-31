@@ -39,6 +39,7 @@ from . import aoi as aoi_mod
 from .connectors import (basemaps, geocode, hazards, indices, osm, registry,
                          stac, weather)
 from .explorer_advanced import AdvancedTabsMixin
+from .explorer_overview import OverviewTabsMixin
 from .explorer_sensors import SensorTabsMixin
 from .explorer_toolbox import ToolboxTabsMixin
 from .live_commands import (
@@ -114,7 +115,7 @@ class ExplorerTask(QgsTask):
             self._on_error(f"{self.description()}: failed", "")
 
 
-class ExplorerDock(SensorTabsMixin, AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
+class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
     """The Data Explorer panel."""
 
     closed = pyqtSignal()
@@ -163,6 +164,8 @@ class ExplorerDock(SensorTabsMixin, AdvancedTabsMixin, ToolboxTabsMixin, QDockWi
         self.tabs.addTab(self._build_basemaps_tab(), "Basemaps")
         self.tabs.addTab(self._build_sources_tab(), "Sources")
         self.tabs.addTab(self._build_log_tab(), "Log")
+        self.tabs.insertTab(0, self._build_overview_tab(), "Overview")
+        self.tabs.setCurrentIndex(0)
         outer.addWidget(self.tabs, 1)
 
         status = QHBoxLayout()
@@ -647,6 +650,14 @@ class ExplorerDock(SensorTabsMixin, AdvancedTabsMixin, ToolboxTabsMixin, QDockWi
     def _restore_aoi(self):
         saved = self._settings.value("qgis_mcp/explorer_aoi", "")
         if not saved:
+            # Nothing chosen yet: the current map view is the obvious area,
+            # so every button works from the first click.
+            if self.iface is not None:
+                try:
+                    self.set_aoi(aoi_mod.from_canvas(self.iface), announce=False)
+                    self.aoi_label.setText(self.aoi_label.text().replace("canvas area", "Current map view"))
+                except Exception:
+                    pass
             return
         try:
             data = json.loads(saved)

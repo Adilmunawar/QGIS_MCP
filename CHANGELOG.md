@@ -17,6 +17,7 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 - A twentieth global raster: Meta's high resolution population density (30 m) streamed from AWS Open Data, with the sum of the cells reported as the population of the area.
 - `qgis_mcp_plugin/sensor_commands.py`: 9 new commands and MCP tools (118 total): `fetch_river_gauges`, `fetch_buoys`, `fetch_tide_stations`, `fetch_aircraft`, `list_sensorthings_servers`, `discover_sensorthings`, `add_sensorthings_layer`, `estimate_population` (WorldPop and Meta combined, optional age pyramid) and `add_3d_tiles` (Google Photorealistic 3D Tiles with a stored key, the Cesium sample, or any tileset URL).
 - `tests/test_sensors_headless.py` (45 offline checks); the explorer suite grows to 52.
+- **Overview tab** (`qgis_mcp_plugin/explorer_overview.py`), first in the Data Explorer: the area defaults to the current map view and nine one click buttons pull a quick look card, the latest Sentinel-2 image, NDVI, land cover, a DEM, surface temperature, the population grid, 30 days of rain or a PDF report. Sixteen tabs.
 - The Data Explorer gets its own toolbar button (placed first, with its own icon), an `Open Data Explorer` button at the top of the server panel, and it opens by itself the first time QGIS starts after an install or upgrade.
 
 ### Changed

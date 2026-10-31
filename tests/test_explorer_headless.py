@@ -110,8 +110,8 @@ dock.resize(560, 940)
 app.setFont(__import__("qgis.PyQt.QtGui", fromlist=["QFont"]).QFont("Segoe UI", 9))
 dock.show()
 app.processEvents()
-check("dock builds with 15 tabs", dock.tabs.count() == 15, dock.tabs.count())
-check("sensors tab sits before monitor", [dock.tabs.tabText(i) for i in range(dock.tabs.count())][9:12] == ["3D", "Sensors", "Monitor"], [dock.tabs.tabText(i) for i in range(dock.tabs.count())])
+check("dock builds with 16 tabs, Overview first", dock.tabs.count() == 16 and dock.tabs.tabText(0) == "Overview" and dock.tabs.currentIndex() == 0, dock.tabs.count())
+check("sensors tab sits before monitor", [dock.tabs.tabText(i) for i in range(dock.tabs.count())][10:13] == ["3D", "Sensors", "Monitor"], [dock.tabs.tabText(i) for i in range(dock.tabs.count())])
 check("sources table populated", dock.sources_table.rowCount() >= 10)
 check("basemap list populated", dock.basemap_list.count() >= 15)
 check("osm presets populated", dock.osm_preset.count() == len(OSM_PRESETS))
@@ -283,6 +283,16 @@ def stubbed_scenario():
     dock._add_tiles()
     check("3d tiles: google needs a key", "Google Maps Platform key" in dock.log_view.toPlainText())
 
+    # Overview quick look (network backed datasets fail offline and are reported, not fatal) --
+    dock._quick_look()
+    check("overview quick look finished", pump(120))
+    text = dock.overview_view.toPlainText()
+    check("overview shows weather and forecast with errors listed", "Weather now" in text and "23.2" in text
+          and "Not available" in text, text[:300])
+    dock._quick_rain()
+    check("overview rainfall finished", pump(60))
+    check("overview rainfall rendered", "Last 30 days" in dock.overview_view.toPlainText(), dock.overview_view.toPlainText()[:200])
+
     # Screenshots -----------------------------------------------------------------------
     os.makedirs(SHOTS, exist_ok=True)
     for idx in range(dock.tabs.count()):
@@ -290,7 +300,7 @@ def stubbed_scenario():
         app.processEvents()
         name = dock.tabs.tabText(idx).lower().replace(" ", "_")
         dock.grab().save(os.path.join(SHOTS, f"explorer_{idx}_{name}.png"))
-    check("screenshots written", os.path.exists(os.path.join(SHOTS, "explorer_0_imagery.png")))
+    check("screenshots written", os.path.exists(os.path.join(SHOTS, "explorer_0_overview.png")))
 
     # Cancel / idle state ---------------------------------------------------------------
     check("progress idle after work", dock.progress.format() == "Idle" and not dock.cancel_button.isEnabled())

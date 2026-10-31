@@ -38,12 +38,13 @@ You do not need Claude, an API key or an MCP client to use this toolbox. The **D
 
 **Open it**: the **Data Explorer** toolbar button (globe icon), `Plugins > QGIS MCP > Data Explorer`, or the `Open Data Explorer` button at the top of the QGIS MCP server panel. It also opens by itself the first time QGIS starts after an install or upgrade.
 
-**Choose the area of interest** in any of five ways: type a place name and a radius, press *Draw on map* and drag a rectangle, use the current map view, use a layer's extent, or use the selected features of a layer. The area is outlined in orange on the canvas and remembered between sessions.
+**Choose the area of interest** in any of five ways (until you do, the current map view is used): type a place name and a radius, press *Draw on map* and drag a rectangle, use the current map view, use a layer's extent, or use the selected features of a layer. The area is outlined in orange on the canvas and remembered between sessions.
 
 **Then work through the tabs.** Every fetch runs in the background with a progress bar and a Cancel button, so QGIS never freezes.
 
 | Tab | What you can do with clicks |
 | --- | --- |
+| Overview | The front door: your map view is the area until you choose one, and nine one click buttons give a quick look card (weather now, seven day forecast, elevation, land cover shares, population, topsoil), the latest clear Sentinel-2 image, NDVI, the land cover map, a DEM, surface temperature, the population grid, the last 30 days of rain and a PDF report |
 | Imagery | Search Sentinel-2, Landsat or Sentinel-1 scenes by date and cloud cover; stream true colour or chosen bands; compute NDVI, EVI, SAVI, NDWI, MNDWI, NDMI, NDBI, NBR, BSI or your own band expression with cloud masking; build a time series of any index |
 | Weather | Current conditions, a seven day forecast, air quality, daily history back to 1940, NASA POWER agro climatology; climate projections to 2050 from seven CMIP6 models; a seasonal outlook up to nine months; attach live weather fields to every feature of a layer |
 | Elevation | Copernicus DEM 30 m for the area; slope, aspect, hillshade, roughness, TRI and TPI; elevation profiles across the area or along a selected road or river, with a chart |
@@ -135,7 +136,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 
 **Data Explorer dashboard (no AI required)**
 - A dock panel inside QGIS: pick an area of interest by typing a place, drawing a rectangle on the map, using the current view, a layer's extent or its selected features.
-- Fifteen tabs: Imagery, Weather, Elevation, OpenStreetMap, Hazards, Land and Soil, Water, Boundaries and Species, Analysis, 3D, Sensors, Monitor, Basemaps, Sources and a Log; every fetch runs as a background task with a progress bar and Cancel, so QGIS never freezes.
+- Sixteen tabs: Overview, Imagery, Weather, Elevation, OpenStreetMap, Hazards, Land and Soil, Water, Boundaries and Species, Analysis, 3D, Sensors, Monitor, Basemaps, Sources and a Log; every fetch runs as a background task with a progress bar and Cancel, so QGIS never freezes.
 - Search Sentinel-2 or Landsat scenes, stream true colour or chosen bands, compute NDVI and other indices with one click, build index time series, add DEMs and derive hillshade or slope, fetch OSM presets such as hospitals, roads, buildings and farmland, pull weather for the area centre or attach it to every feature of a layer.
 - Open it from the QGIS MCP toolbar button menu or `Plugins > QGIS MCP > Data Explorer`.
 
