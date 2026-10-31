@@ -14,6 +14,7 @@ homepage=https://github.com/adilmunawar/qgis_mcp
 tracker=https://github.com/adilmunawar/qgis_mcp/issues
 repository=https://github.com/adilmunawar/qgis_mcp
 experimental=False
+license=See LICENSE and NOTICE (attribution required)
 hasProcessingProvider=no
 changelog=4.4.0 - Sensors release: Sensors tab with USGS river gauges, NOAA buoys and tide stations, OpenSky aircraft and any OGC SensorThings server as a live layer; population estimates from WorldPop and Meta's 30 m grid with age pyramids; Cesium 3D Tiles including Google Photorealistic with a key. 118 MCP tools.
  4.3.0 - Advanced release: 3D and Monitor tabs; 15 more global rasters (CCI land cover, forest, ALOS and Copernicus 90 m DEMs, MODIS temperature, NDVI, leaf area, evapotranspiration, productivity, snow, burned area, biomass, biodiversity, electrification, 3DEP height); climate projections and seasonal outlooks; elevation profiles; 3D buildings, terrain and lidar point clouds; NASA EONET events; OpenAQ; live monitor with alerts; PDF reports. 109 MCP tools.

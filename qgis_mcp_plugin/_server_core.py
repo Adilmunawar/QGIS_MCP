@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Transport, authentication, permission gating and dispatch.
 
 Assembled with the command handlers in ``mcp_server.py``; this module holds
@@ -26,6 +27,9 @@ from .permissions import APPROVE, DENY, PermissionManager, category_for
 LOG_TAG = "QGIS MCP"
 PROTOCOL_VERSION = 3
 PLUGIN_VERSION = "4.4.0"
+PROJECT_NAME = "QGIS MCP toolbox"
+PROJECT_AUTHOR = "Adil Munawar"
+PROJECT_URL = "https://github.com/Adilmunawar/QGIS_MCP"
 
 MAX_BUFFER_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_SCAN = 2_000_000
@@ -344,6 +348,9 @@ class ServerCore(QObject):
                 "client": name,
                 "protocol_version": PROTOCOL_VERSION,
                 "plugin_version": PLUGIN_VERSION,
+                "project": PROJECT_NAME,
+                "author": PROJECT_AUTHOR,
+                "repository": PROJECT_URL,
                 "profile": self.permissions.profile,
                 "requires_token": self.require_token,
             },

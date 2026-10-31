@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Offline tests for the 4.4.0 toolbox: river gauges, buoys, tides, aircraft,
 SensorThings URIs, WorldPop parsing, the population dataset and 3D Tiles.
 

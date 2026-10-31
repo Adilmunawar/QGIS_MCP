@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Water and ocean gauges: USGS river gauges, NOAA NDBC buoys, NOAA tide stations.
 
 All keyless and public domain. Each function returns point features plus a

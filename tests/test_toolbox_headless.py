@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Offline tests for the toolbox connectors and commands (stubbed HTTP).
 
     "C:/Program Files/QGIS 4.2.2/bin/python-qgis.bat" tests/test_toolbox_headless.py

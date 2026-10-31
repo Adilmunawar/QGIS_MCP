@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Data Explorer: a click-driven dashboard over the live-data engine.
 
 The same connectors that serve the MCP tools are exposed here as a dock
@@ -180,6 +181,14 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         status.addWidget(self.progress, 1)
         status.addWidget(self.cancel_button)
         outer.addLayout(status)
+        from ._server_core import PLUGIN_VERSION, PROJECT_AUTHOR, PROJECT_NAME, PROJECT_URL
+        credit = QLabel(f"<a href='{PROJECT_URL}' style='color:#7aa7d9;text-decoration:none'>"
+                        f"{PROJECT_NAME} {PLUGIN_VERSION}</a> &nbsp;·&nbsp; © 2026 {PROJECT_AUTHOR}")
+        credit.setOpenExternalLinks(True)
+        credit.setAlignment(Qt.AlignmentFlag.AlignRight)
+        credit.setStyleSheet("color:#8a8a8a; font-size:11px;")
+        credit.setToolTip("Attribution notice; keep it in copies (see NOTICE in the repository)")
+        outer.addWidget(credit)
 
         self.setWidget(root)
 

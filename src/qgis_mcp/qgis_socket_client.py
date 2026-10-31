@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """
 QGIS MCP Client - Simple client to connect to the QGIS MCP server
 """

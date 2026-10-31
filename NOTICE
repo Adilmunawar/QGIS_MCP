@@ -1,0 +1,31 @@
+QGIS MCP: open data toolbox and MCP bridge for QGIS
+Copyright (c) 2026 Adil Munawar (https://github.com/Adilmunawar)
+
+This product is developed and maintained by Adil Munawar. The Data Explorer
+dashboard, the live data engine (connectors, area of interest resolver, raster
+catalogue, indices, monitor), the toolbox, advanced and sensor command sets,
+the permission system, the panel and the test suites are original work by
+Adil Munawar.
+
+The project started from the MCP bridge by jjsantos01
+(https://github.com/jjsantos01/qgis_mcp), used under the MIT License. The MIT
+notice for those portions is kept in the LICENSE file.
+
+Attribution requirements
+------------------------
+Any redistribution of this software, in source or binary form, modified or
+not, must:
+
+1. keep this NOTICE file and the copyright notices in the source files;
+2. keep the "About" information shown by the plugin (plugin name, author,
+   repository link) or an equivalent visible credit;
+3. state clearly that the work is derived from QGIS MCP by Adil Munawar and
+   link to https://github.com/Adilmunawar/QGIS_MCP;
+4. not present the work, or a renamed copy of it, as the original or as the
+   work of someone else, and not use the project name in a way that suggests
+   endorsement by the author (see TRADEMARKS.md).
+
+Third party data sources accessed by the software (Copernicus, NASA, NOAA,
+USGS, ESA, Meta Data for Good, WorldPop, OpenStreetMap contributors, Open-Meteo,
+ISRIC, GBIF, JRC and others) keep their own licences and attribution rules,
+which the software records on every layer it creates.

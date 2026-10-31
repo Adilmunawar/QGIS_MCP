@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Advanced toolbox commands: climate projections and seasonal outlooks,
 elevation profiles, 3D buildings, terrain and point clouds, natural events,
 OpenAQ stations, and the live monitor.

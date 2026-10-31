@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Shared bootstrap for the headless suites.
 
 Imports the plugin from this checkout, not from the QGIS profile, so a test

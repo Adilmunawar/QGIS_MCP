@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Weather and climate: Open-Meteo and NASA POWER.
 
 Both are keyless. Open-Meteo answers for several points in one call, which

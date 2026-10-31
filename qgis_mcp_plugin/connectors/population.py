@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """WorldPop population statistics for a bounding box (asynchronous task API).
 
 Keyless. The server prefixes its JSON with PHP deprecation HTML, so replies

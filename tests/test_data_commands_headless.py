@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Headless tests for the Phase 3 data commands and the Commands tab.
 
     "C:/Program Files/QGIS 4.2.0/bin/python-qgis.bat" tests/test_data_commands_headless.py

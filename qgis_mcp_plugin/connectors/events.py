@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """NASA EONET v3 natural events: wildfires, storms, floods, volcanoes and more.
 
 Keyless. Each event keeps a track of geometries over time; the feature is

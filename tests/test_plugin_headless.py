@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Headless integration test for the QGIS MCP plugin.
 
 Run with QGIS's own interpreter::

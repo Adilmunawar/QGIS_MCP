@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Global rasters for an area: land cover, land use, forest, biomass, surface
 water, elevation, land surface temperature, vegetation, snow, burned area,
 evapotranspiration, productivity, biodiversity and electrification.

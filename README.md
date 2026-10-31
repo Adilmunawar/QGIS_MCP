@@ -97,7 +97,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 - [FAQ and troubleshooting](#faq-and-troubleshooting)
 - [Contributing](#contributing)
 - [Credits](#credits)
-- [License](#license)
+- [License and attribution](#license-and-attribution)
 
 ## Features
 
@@ -746,8 +746,10 @@ Every contribution is credited in the changelog and the contributors list. Pleas
 
 Maintained by [Adil Munawar](https://github.com/adilmunawar).
 
-## License
+## License and attribution
 
 [MIT](LICENSE). Copyright Adil Munawar 2026, with upstream copyright retained for jjsantos01.
+
+Credit is part of the deal. Every copy or fork must keep the [NOTICE](NOTICE) file, the copyright lines in the source files and the About information shown by the plugin, and must say that it is derived from QGIS MCP by Adil Munawar with a link to this repository. Renaming a copy and presenting it as your own work is not allowed; see [TRADEMARKS.md](TRADEMARKS.md) for what a fork may and may not do, [AUTHORS.md](AUTHORS.md) for who wrote what, and [CITATION.cff](CITATION.cff) to cite the project in a report or paper.
 
 <sub>Keywords: QGIS MCP server, QGIS AI assistant, Claude QGIS integration, PyQGIS automation, Model Context Protocol GIS, QGIS plugin, geospatial AI agent, remote sensing, LLM agents.</sub>

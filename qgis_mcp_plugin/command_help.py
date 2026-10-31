@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """One-line descriptions for every command, for the panel's Commands tab.
 
 Kept beside the permission table rather than inside the handlers so the panel

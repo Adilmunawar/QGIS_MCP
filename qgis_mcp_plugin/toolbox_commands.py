@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Toolbox commands: land cover, soil, water, boundaries, species, sensors,
 disaster alerts, and the analysis workflows built on the imagery engine
 (change detection, zonal statistics, temporal series, area reports).

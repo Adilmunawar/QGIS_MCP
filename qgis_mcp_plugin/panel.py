@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """The QGIS MCP control panel.
 
 Design notes
@@ -232,6 +233,12 @@ class QgisMCPDockWidget(QDockWidget):
 
         self.address_label = caption("not listening")
         layout.addWidget(self.address_label)
+        from ._server_core import PLUGIN_VERSION, PROJECT_AUTHOR, PROJECT_NAME, PROJECT_URL
+        credit = QLabel(f"<a href='{PROJECT_URL}' style='color:#7aa7d9;text-decoration:none'>"
+                        f"{PROJECT_NAME} {PLUGIN_VERSION}</a> by {PROJECT_AUTHOR}")
+        credit.setOpenExternalLinks(True)
+        credit.setStyleSheet("color:#8a8a8a; font-size:11px;")
+        layout.addWidget(credit)
 
         controls = QHBoxLayout()
         self.start_button = QPushButton("Start")

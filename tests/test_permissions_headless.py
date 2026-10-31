@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Headless tests for permission profiles, approvals, tokens and auditing.
 
 Run with QGIS's own interpreter::

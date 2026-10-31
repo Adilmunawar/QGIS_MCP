@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Sensor network, population and 3D Tiles commands: USGS river gauges, NOAA
 buoys and tide stations, OpenSky aircraft, OGC SensorThings servers through
 the native QGIS provider, WorldPop population estimates, and Cesium 3D Tiles

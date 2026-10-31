@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Live-data commands: imagery, indices, weather, places, OSM, hazards.
 
 Mixed into :class:`QgisMCPServer`. Each command resolves an area of interest

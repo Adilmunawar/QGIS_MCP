@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below and keep the attribution notices."
+title: "QGIS MCP: open data toolbox and MCP bridge for QGIS"
+type: software
+authors:
+  - family-names: Munawar
+    given-names: Adil
+    email: adilmunawarx@gmail.com
+repository-code: "https://github.com/Adilmunawar/QGIS_MCP"
+url: "https://github.com/Adilmunawar/QGIS_MCP"
+version: 4.4.0
+date-released: 2026-10-31
+license: MIT
+keywords:
+  - QGIS
+  - remote sensing
+  - Sentinel-2
+  - open data
+  - Model Context Protocol
+  - geospatial toolbox
+abstract: >-
+  A QGIS plugin that puts live public geospatial data behind buttons: a Data
+  Explorer dashboard with an area of interest picker, satellite imagery and
+  spectral indices, weather and climate, elevation and 3D, land cover, soil,
+  water, species, sensor networks, population and a live monitor, plus a
+  permission gated Model Context Protocol bridge so AI assistants can drive
+  QGIS through the same engine.

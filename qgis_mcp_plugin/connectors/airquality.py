@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """OpenAQ v3 reference grade air quality stations (needs a free API key)."""
 
 import re

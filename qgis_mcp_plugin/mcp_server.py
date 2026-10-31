@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Command handlers for the QGIS MCP bridge.
 
 Transport, authentication and permission gating live in ``_server_core``;

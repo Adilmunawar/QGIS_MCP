@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Catalogue of live-data sources, grouped by category.
 
 Each entry records what the agent needs to choose a source responsibly: the

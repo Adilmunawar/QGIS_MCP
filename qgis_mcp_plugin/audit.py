@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Append-only audit trail.
 
 The panel's activity view is a widget, and widgets die with the window. If an

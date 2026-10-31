@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Area-of-interest resolution.
 
 Every live-data command takes an ``aoi`` and none of them should care how it

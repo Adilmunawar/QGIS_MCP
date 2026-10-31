@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Data Explorer tabs for the toolbox commands: land and soil, water,
 boundaries and species, sensors and alerts, and the analysis workflows.
 

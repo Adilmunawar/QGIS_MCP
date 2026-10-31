@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """
 QGIS MCP server
 ===============
@@ -275,7 +276,8 @@ async def server_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
 
 mcp = FastMCP(
     "Qgis_mcp",
-    instructions="QGIS integration through the Model Context Protocol",
+    instructions="QGIS MCP toolbox by Adil Munawar (https://github.com/Adilmunawar/QGIS_MCP): "
+                 "QGIS integration and live open data through the Model Context Protocol",
     lifespan=server_lifespan,
 )
 

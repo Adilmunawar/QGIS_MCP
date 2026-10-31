@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Plugin lifecycle tests against a stub iface.
 
     "C:/Program Files/QGIS 4.2.0/bin/python-qgis.bat" tests/test_lifecycle_headless.py

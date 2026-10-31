@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Permission profiles, temporary grants and the approval queue.
 
 Every command carries a risk category. A profile maps each category to one of

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Offline tests for the live-data layer.
 
 Every network call is stubbed through ``qgis_mcp_plugin.net.fetch`` with

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Species occurrence records from GBIF (CC0 / CC BY per dataset)."""
 
 from .. import net

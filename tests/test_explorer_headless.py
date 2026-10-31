@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
 """Offscreen tests for the Data Explorer dock.
 
 Builds the dock without a QGIS main window, drives it with stubbed network
