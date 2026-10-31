@@ -8,11 +8,11 @@
 
 *Explore the world's open data from inside QGIS, and let AI assist with full control in your hands.*
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![License: source available](https://img.shields.io/badge/license-source%20available-orange.svg)](LICENSE)
 [![QGIS](https://img.shields.io/badge/QGIS-3.22%20to%204.x-589632?logo=qgis&logoColor=white)](https://qgis.org/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6f42c1)](https://modelcontextprotocol.io/)
-[![Plugin 4.5.0](https://img.shields.io/badge/plugin-4.5.0-blue)](CHANGELOG.md)
+[![Plugin 4.6.0](https://img.shields.io/badge/plugin-4.6.0-blue)](CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/adilmunawar/qgis_mcp?style=social)](https://github.com/adilmunawar/qgis_mcp/stargazers)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](#contributing)
 [![Good first issues](https://img.shields.io/github/issues/adilmunawar/qgis_mcp/good%20first%20issue?label=good%20first%20issues)](https://github.com/adilmunawar/qgis_mcp/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -748,9 +748,9 @@ Maintained by [Adil Munawar](https://github.com/adilmunawar).
 
 ## License and attribution
 
-[GPL-3.0-or-later](LICENSE). Copyright Adil Munawar 2026. The code received from jjsantos01's bridge keeps its MIT notice in [LICENSE-MIT-upstream](LICENSE-MIT-upstream); versions before 4.5.0 remain available under MIT.
+**Source available.** From version 4.6.0 the project is under the [QGIS MCP Toolbox Source Available License 1.0](LICENSE): you may read the code and use the toolbox personally, for study, for openly published research and for a 30 day evaluation. Use in or for an organisation, and any redistribution or fork, needs written permission from the author; ask at adilmunawarx@gmail.com with a line about the intended use. Permission is normally given free of charge for honest use that keeps the credit.
 
-Under the GPL anyone who distributes a modified copy must publish the changes under the same licence, keep the notices and mark what was changed.
+Copyright Adil Munawar 2026. The code received from jjsantos01's bridge keeps its MIT notice in [LICENSE-MIT-upstream](LICENSE-MIT-upstream). Earlier versions keep their licences: up to 4.4.0 MIT, 4.5.0 GPL-3.0-or-later. Because the licence is not GPL compatible, the plugin is installed from this repository's releases, not from the official QGIS plugin repository.
 
 Credit is part of the deal. Every copy or fork must keep the [NOTICE](NOTICE) file, the copyright lines in the source files and the About information shown by the plugin, and must say that it is derived from QGIS MCP by Adil Munawar with a link to this repository. Renaming a copy and presenting it as your own work is not allowed; see [TRADEMARKS.md](TRADEMARKS.md) for what a fork may and may not do, [docs/ENFORCEMENT.md](docs/ENFORCEMENT.md) for how misuse is handled, [AUTHORS.md](AUTHORS.md) for who wrote what, and [CITATION.cff](CITATION.cff) to cite the project in a report or paper.
 

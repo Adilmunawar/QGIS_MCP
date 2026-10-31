@@ -1,7 +1,7 @@
 [general]
 name=QGIS MCP Bridge
 description=Open data toolbox for QGIS: a Data Explorer with 16 tabs for live satellite imagery, 20 global rasters, weather and climate, elevation and 3D, OpenStreetMap, hazards, sensor networks, population and a live monitor, plus a permission gated MCP bridge so Claude and other AI agents can drive QGIS
-version=4.5.0
+version=4.6.0
 qgisMinimumVersion=3.22
 qgisMaximumVersion=4.99
 supportsQt6=True
@@ -14,9 +14,10 @@ homepage=https://github.com/adilmunawar/qgis_mcp
 tracker=https://github.com/adilmunawar/qgis_mcp/issues
 repository=https://github.com/adilmunawar/qgis_mcp
 experimental=False
-license=GPL-3.0-or-later
+license=Source available (QGIS MCP Toolbox Source Available License 1.0): personal, study and evaluation use free; other use and any redistribution need written permission. See LICENSE.
 hasProcessingProvider=no
-changelog=4.5.0 - Licence and attribution release: GPL-3.0-or-later, NOTICE, visible credit, Overview tab with one click buttons, Data Explorer toolbar button.
+changelog=4.6.0 - Licence: QGIS MCP Toolbox Source Available License 1.0 (permission required for organisational use and redistribution). Not for the official QGIS plugin repository.
+ 4.5.0 - Licence and attribution release: GPL-3.0-or-later, NOTICE, visible credit, Overview tab with one click buttons, Data Explorer toolbar button.
  4.4.0 - Sensors release: Sensors tab with USGS river gauges, NOAA buoys and tide stations, OpenSky aircraft and any OGC SensorThings server as a live layer; population estimates from WorldPop and Meta's 30 m grid with age pyramids; Cesium 3D Tiles including Google Photorealistic with a key. 118 MCP tools.
  4.3.0 - Advanced release: 3D and Monitor tabs; 15 more global rasters (CCI land cover, forest, ALOS and Copernicus 90 m DEMs, MODIS temperature, NDVI, leaf area, evapotranspiration, productivity, snow, burned area, biomass, biodiversity, electrification, 3DEP height); climate projections and seasonal outlooks; elevation profiles; 3D buildings, terrain and lidar point clouds; NASA EONET events; OpenAQ; live monitor with alerts; PDF reports. 109 MCP tools.
  4.2.0 - Toolbox release: Land and Soil, Water, Boundaries and Species and Analysis tabs; ESA WorldCover, Esri land use, JRC surface water, NASADEM, SoilGrids, GloFAS, marine, geoBoundaries, GBIF, Sensor.Community, GDACS; change detection, zonal statistics, temporal series, HTML area report. 96 MCP tools.

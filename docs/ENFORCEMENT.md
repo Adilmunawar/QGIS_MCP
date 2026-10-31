@@ -23,17 +23,20 @@ advice; for a dispute with money at stake, involve a lawyer early.
 
 ## 2. What counts as a violation
 
-Under the GNU GPL v3 (the project licence from version 4.5.0):
+Under the QGIS MCP Toolbox Source Available License 1.0 (from version 4.6.0):
 
-- distributing a modified copy without the source and without the same
-  licence;
+- using the Software in or for an organisation, or hosting it for others,
+  without written permission;
+- distributing, publishing or forking the Software or a modified version
+  without written permission;
+- publishing it under another name or presenting it as someone else's work;
 - removing or hiding the copyright notices, `NOTICE`, or the author credit;
-- presenting the work, or a renamed copy, as someone else's original;
-- adding restrictions the GPL forbids.
+- sublicensing it or building a competing product on it.
 
-Versions published before 4.5.0 were MIT licensed: keeping the copyright
-notice was required, renaming was not forbidden. Code that came from
-jjsantos01's bridge stays under MIT.
+Version 4.5.0 is GPL-3.0-or-later (its rules: same licence, notices kept,
+changes marked) and versions up to 4.4.0 are MIT (notice kept, renaming not
+forbidden). Code that came from jjsantos01's bridge stays under MIT. A copier
+who took an earlier version is bound by that version's licence, not this one.
 
 ## 3. Steps when you find a copy that breaks the terms
 
@@ -45,9 +48,9 @@ jjsantos01's bridge stays under MIT.
    comments, test names and strings are convincing.
 3. **Write to them once.** State who you are, which licence clause they broke,
    what you require (restore the credit and the licence, or remove the copy)
-   and a deadline (7 to 14 days). Keep it factual. Under GPL section 8 their
-   rights ended when they broke the terms; they can be restored if they cure
-   the breach, which is usually the outcome you want.
+   and a deadline (7 to 14 days). Keep it factual. Under section 8 of the licence their rights ended when they broke the terms;
+   they can be restored if they cure the breach within 30 days, which is
+   usually the outcome you want.
 4. **Takedown notices.** If they do not respond:
    - GitHub: https://github.com/contact/dmca (DMCA notice; GitHub removes the
      repository after review, usually within days; the other party can file a
@@ -68,10 +71,10 @@ jjsantos01's bridge stays under MIT.
 - Do not claim rights over the upstream MIT code or over "QGIS", which is a
   trademark of QGIS.org.
 
-## 5. If you decide permission should be required
+## 5. Granting permission
 
-The GPL grants permission in advance. If you want every use to need your
-written permission, the choices are a private repository, or publishing
-under the source available draft in `docs/licensing/source-available-draft.md`
-(or "all rights reserved"), accepting that the plugin cannot then be listed in
-the official QGIS repository and that earlier MIT releases remain free.
+Keep a simple record (a spreadsheet or a folder of emails) of who asked, for
+what use, and what you granted, with the date. A short reply such as "You may
+use QGIS MCP at <organisation> for <purpose> under the licence terms, credit
+kept, no redistribution" is enough. Permission is personal to the named party
+and does not transfer.

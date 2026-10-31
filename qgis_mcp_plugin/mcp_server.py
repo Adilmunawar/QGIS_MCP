@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-QGIS-MCP-Source-Available-1.0
 """Command handlers for the QGIS MCP bridge.
 
 Transport, authentication and permission gating live in ``_server_core``;
@@ -331,7 +331,7 @@ class QgisMCPServer(SensorsMixin, AdvancedMixin, ToolboxMixin, LiveDataMixin, Da
             "project": PROJECT_NAME,
             "author": PROJECT_AUTHOR,
             "repository": PROJECT_URL,
-            "licence": "GPL-3.0-or-later",
+            "licence": "LicenseRef-QGIS-MCP-Source-Available-1.0 (permission required for organisational use and redistribution)",
             "permissions": self.permissions.snapshot(),
             "commands": sorted(self._handlers()),
         }

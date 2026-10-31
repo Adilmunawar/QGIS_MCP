@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-QGIS-MCP-Source-Available-1.0
 """Data Explorer tabs for the toolbox commands: land and soil, water,
 boundaries and species, sensors and alerts, and the analysis workflows.
 

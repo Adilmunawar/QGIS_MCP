@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-QGIS-MCP-Source-Available-1.0
 """Offline tests for the 4.4.0 toolbox: river gauges, buoys, tides, aircraft,
 SensorThings URIs, WorldPop parsing, the population dataset and 3D Tiles.
 

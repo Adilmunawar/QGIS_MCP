@@ -7,8 +7,10 @@ catalogue, indices, monitor), the toolbox, advanced and sensor command sets,
 the permission system, the panel and the test suites are original work by
 Adil Munawar.
 
-The project is licensed under the GNU General Public License version 3 or
-later (see LICENSE). It started from the MCP bridge by jjsantos01
+The project is licensed under the QGIS MCP Toolbox Source Available License
+1.0 (see LICENSE): personal, study and evaluation use is free; use in or for
+an organisation and any redistribution need written permission from the
+author (adilmunawarx@gmail.com). It started from the MCP bridge by jjsantos01
 (https://github.com/jjsantos01/qgis_mcp), used under the MIT License; that
 notice is kept in LICENSE-MIT-upstream.
 
@@ -33,11 +35,8 @@ which the software records on every layer it creates.
 
 Licence statement
 -----------------
-QGIS MCP is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version. It is distributed WITHOUT ANY WARRANTY; see the LICENSE file for the
-full text. The attribution requirements above are additional terms permitted
-by section 7 of the GNU GPL version 3 (preservation of author attribution and
-legal notices). Versions published before 4.5.0 were released under the MIT
-License and remain available under it.
+From version 4.6.0 the Software is distributed under the QGIS MCP Toolbox
+Source Available License 1.0 in the LICENSE file; the attribution
+requirements above are part of its section 4. Earlier versions keep the
+licences they were published under: up to 4.4.0 the MIT License, 4.5.0 the
+GNU GPL version 3 or later. The Software is provided WITHOUT ANY WARRANTY.

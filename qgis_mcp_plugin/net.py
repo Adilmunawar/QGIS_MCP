@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-QGIS-MCP-Source-Available-1.0
 """HTTP helpers for the live-data connectors.
 
 Requests go through QGIS's own network manager so the user's proxy and

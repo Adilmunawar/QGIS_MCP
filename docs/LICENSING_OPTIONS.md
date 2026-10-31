@@ -1,7 +1,10 @@
 # Licensing options for QGIS MCP
 
-**Decision (2026-10-31): option A was adopted. The project is GPL-3.0-or-later
-from version 4.5.0; the rest of this page is kept as the record of the choice.**
+**Decision (2026-10-31): option A (GPL-3.0-or-later) was adopted for version
+4.5.0, then superseded the same day by option B. From version 4.6.0 the
+project is under the QGIS MCP Toolbox Source Available License 1.0
+(`LICENSE`). Version 4.5.0 stays GPL and versions up to 4.4.0 stay MIT. The
+rest of this page is kept as the record of the choice.**
 
 Prepared on 2026-10-31 for the project owner. The repository is MIT today
 (inherited from the upstream bridge by jjsantos01, whose MIT portions stay MIT
@@ -48,7 +51,7 @@ and add `SPDX-License-Identifier: GPL-3.0-or-later` to the file headers.
 Future versions carry the new licence; the versions already published under
 MIT remain MIT.
 
-## Option B: a source available licence (draft in `docs/licensing/source-available-draft.md`)
+## Option B: a source available licence (now the project licence, see `LICENSE`)
 
 - Allows use and internal modification, forbids redistribution under another
   name, removal of credit, competing hosted or packaged products, and

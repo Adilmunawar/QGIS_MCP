@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Adil Munawar. See LICENSE and NOTICE; keep this notice in copies.
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-QGIS-MCP-Source-Available-1.0
 """Offline tests for the 4.3.0 toolbox: datasets catalogue and unit conversion,
 climate and seasonal, EONET, OpenAQ parsing, elevation profiles, 3D
 buildings and terrain, point clouds, the live monitor and PDF reports.

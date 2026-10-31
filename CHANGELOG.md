@@ -9,6 +9,12 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Planned
 - Copernicus Data Space, Overture buildings, FAO WaPOR, CHIRPS, more SensorThings presets. See the roadmap in the README.
 
+## [4.6.0] - Source available licence
+
+### Changed
+- **Licence**: the project moves to the **QGIS MCP Toolbox Source Available License 1.0** (`LICENSE`). Personal, study, openly published research and 30 day evaluation use are free; use in or for an organisation and any redistribution or public fork need the author's written permission. Version 4.5.0 stays GPL-3.0-or-later and versions up to 4.4.0 stay MIT; the upstream MIT notice is kept. The plugin is distributed from this repository's releases, not the official QGIS plugin repository.
+- SPDX headers, `metadata.txt`, `pyproject.toml`, `CITATION.cff`, `NOTICE`, the README and `docs/ENFORCEMENT.md` follow the new licence.
+
 ## [4.5.0] - Licence and attribution release
 
 ### Changed
