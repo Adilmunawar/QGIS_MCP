@@ -309,6 +309,7 @@ class AdvancedTabsMixin:
         view.clicked.connect(self._open_3d)
         tform.addRow(view)
         layout.addWidget(tbox)
+        layout.addWidget(self._tiles_box())
 
         pbox = QGroupBox("Lidar point clouds")
         pform = QFormLayout(pbox)

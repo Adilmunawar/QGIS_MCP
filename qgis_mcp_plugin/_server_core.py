@@ -25,7 +25,7 @@ from .permissions import APPROVE, DENY, PermissionManager, category_for
 
 LOG_TAG = "QGIS MCP"
 PROTOCOL_VERSION = 3
-PLUGIN_VERSION = "4.3.0"
+PLUGIN_VERSION = "4.4.0"
 
 MAX_BUFFER_BYTES = 32 * 1024 * 1024
 DEFAULT_MAX_SCAN = 2_000_000

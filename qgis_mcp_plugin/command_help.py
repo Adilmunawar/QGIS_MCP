@@ -129,6 +129,16 @@ COMMAND_HELP = {
     "start_live_monitor": "Refresh feeds for the area on a timer and raise alerts.",
     "stop_live_monitor": "Stop the live monitor.",
     "get_live_monitor_status": "Monitor configuration, counts and recent alerts.",
+    # sensors, population, 3D Tiles
+    "fetch_river_gauges": "USGS stream gauges with current discharge and stage.",
+    "fetch_buoys": "NOAA buoys with waves, wind, pressure and sea temperature.",
+    "fetch_tide_stations": "NOAA tide stations with the latest water level.",
+    "fetch_aircraft": "Aircraft positions right now from OpenSky.",
+    "list_sensorthings_servers": "Verified public OGC SensorThings servers.",
+    "discover_sensorthings": "Entity sets and counts a SensorThings server offers.",
+    "add_sensorthings_layer": "A SensorThings entity set as a live layer.",
+    "estimate_population": "People in the area from WorldPop and Meta, with age pyramid.",
+    "add_3d_tiles": "Cesium 3D Tiles scene: Google Photorealistic (key) or any URL.",
 }
 
 

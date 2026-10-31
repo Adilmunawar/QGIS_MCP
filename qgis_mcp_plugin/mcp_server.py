@@ -37,10 +37,12 @@ from qgis.utils import active_plugins
 from ._server_core import (
     DEFAULT_MAX_SCAN, PLUGIN_VERSION, PROTOCOL_VERSION, ServerCore,
 )
+from . import net
 from .data_commands import DataCommandsMixin
 from .live_commands import LiveDataMixin
 from .toolbox_commands import ToolboxMixin
 from .advanced_commands import AdvancedMixin
+from .sensor_commands import SensorsMixin
 
 _EXPORT_SUCCESS = getattr(
     getattr(QgsLayoutExporter, "ExportResult", QgsLayoutExporter), "Success", 0
@@ -58,7 +60,7 @@ GEOMETRY_KEYWORDS = {
 }
 
 
-class QgisMCPServer(AdvancedMixin, ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
+class QgisMCPServer(SensorsMixin, AdvancedMixin, ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
     """The full command surface, mounted on the gated transport."""
 
     def _handlers(self):
@@ -188,6 +190,15 @@ class QgisMCPServer(AdvancedMixin, ToolboxMixin, LiveDataMixin, DataCommandsMixi
             "start_live_monitor": self.start_live_monitor,
             "stop_live_monitor": self.stop_live_monitor,
             "get_live_monitor_status": self.get_live_monitor_status,
+            "fetch_river_gauges": self.fetch_river_gauges,
+            "fetch_buoys": self.fetch_buoys,
+            "fetch_tide_stations": self.fetch_tide_stations,
+            "fetch_aircraft": self.fetch_aircraft,
+            "list_sensorthings_servers": self.list_sensorthings_servers,
+            "discover_sensorthings": self.discover_sensorthings,
+            "add_sensorthings_layer": self.add_sensorthings_layer,
+            "estimate_population": self.estimate_population,
+            "add_3d_tiles": self.add_3d_tiles,
         }
 
     # ------------------------------------------------------------------
@@ -483,7 +494,7 @@ class QgisMCPServer(AdvancedMixin, ToolboxMixin, LiveDataMixin, DataCommandsMixi
                 "type": self._layer_type(layer),
                 "visible": self._is_visible(layer_id),
                 "crs": layer.crs().authid(),
-                "source": layer.source(),
+                "source": net.redact(layer.source()),
             }
             if layer.type() == QgsMapLayer.LayerType.VectorLayer:
                 info["feature_count"] = layer.featureCount()

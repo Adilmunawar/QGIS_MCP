@@ -7,7 +7,19 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ## [Unreleased]
 
 ### Planned
-- OGC SensorThings and river gauges, Copernicus Data Space, population grids, Overture buildings, 3D Tiles. See the roadmap in the README.
+- Copernicus Data Space, Overture buildings, FAO WaPOR, CHIRPS, more SensorThings presets. See the roadmap in the README.
+
+## [4.4.0] - Sensors release
+
+### Added
+- **Data Explorer `Sensors` tab** (`qgis_mcp_plugin/explorer_sensors.py`): USGS river gauges, NOAA buoys and tide stations, OpenSky aircraft, and any OGC SensorThings server (presets for Hamburg and the Dutch Samen Meten network) added as a live layer through the native QGIS provider, whole server or area only. A `3D Tiles` box on the 3D tab and a `Population in area` button on Land and Soil. Fifteen tabs.
+- Connectors `gauges.py` (USGS NWIS instantaneous values, NDBC latest observations, NOAA CO-OPS water levels), `aircraft.py` (OpenSky states), `sensorthings.py` (presets, discovery, provider URIs) and `population.py` (WorldPop statistics API with its noisy HTML wrapper handled, totals and age and sex pyramids).
+- A twentieth global raster: Meta's high resolution population density (30 m) streamed from AWS Open Data, with the sum of the cells reported as the population of the area.
+- `qgis_mcp_plugin/sensor_commands.py`: 9 new commands and MCP tools (118 total): `fetch_river_gauges`, `fetch_buoys`, `fetch_tide_stations`, `fetch_aircraft`, `list_sensorthings_servers`, `discover_sensorthings`, `add_sensorthings_layer`, `estimate_population` (WorldPop and Meta combined, optional age pyramid) and `add_3d_tiles` (Google Photorealistic 3D Tiles with a stored key, the Cesium sample, or any tileset URL).
+- `tests/test_sensors_headless.py` (40 offline checks); the explorer suite grows to 52.
+
+### Changed
+- `pyproject.toml`, `metadata.txt` and the plugin report version 4.4.0.
 
 ## [4.3.0] - Advanced release
 

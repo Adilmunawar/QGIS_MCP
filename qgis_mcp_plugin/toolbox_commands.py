@@ -155,7 +155,7 @@ class ToolboxMixin:
             if lo is None or hi is None or lo == hi:
                 lo, hi = (spec.get("valid_range") or (0, 1))
             _ramp_style(layer, float(lo), float(hi), spec["ramp"], spec.get("unit"))
-        source_id = "esa-worldcover" if dataset == "worldcover" else "planetary-computer"
+        source_id = spec.get("source_id") or ("esa-worldcover" if dataset == "worldcover" else "planetary-computer")
         layer = self._add_layer(layer, source_id, {"dataset": dataset, "bbox": prepared["bbox"],
                                                    "tiles": prepared["tiles"]})
         meta = layer.metadata()

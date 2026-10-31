@@ -39,6 +39,7 @@ from . import aoi as aoi_mod
 from .connectors import (basemaps, geocode, hazards, indices, osm, registry,
                          stac, weather)
 from .explorer_advanced import AdvancedTabsMixin
+from .explorer_sensors import SensorTabsMixin
 from .explorer_toolbox import ToolboxTabsMixin
 from .live_commands import (
     LiveDataMixin, _memory_layer_from_features, _safe_name, _split_by_geometry,
@@ -113,7 +114,7 @@ class ExplorerTask(QgsTask):
             self._on_error(f"{self.description()}: failed", "")
 
 
-class ExplorerDock(AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
+class ExplorerDock(SensorTabsMixin, AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
     """The Data Explorer panel."""
 
     closed = pyqtSignal()
@@ -158,6 +159,7 @@ class ExplorerDock(AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
         self.tabs.addTab(self._build_hazards_tab(), "Hazards")
         self._build_toolbox_tabs()
         self._build_advanced_tabs()
+        self._build_sensor_tabs()
         self.tabs.addTab(self._build_basemaps_tab(), "Basemaps")
         self.tabs.addTab(self._build_sources_tab(), "Sources")
         self.tabs.addTab(self._build_log_tab(), "Log")

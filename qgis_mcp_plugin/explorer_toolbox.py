@@ -62,8 +62,12 @@ class ToolboxTabsMixin:
         add.clicked.connect(self._add_dataset)
         summarise = QPushButton("Summarise only")
         summarise.clicked.connect(self._summarise_dataset)
+        population = QPushButton("Population in area")
+        population.setToolTip("WorldPop total for 2020 and the sum of Meta's 30 m grid, with an age pyramid")
+        population.clicked.connect(self._population)
         row.addWidget(add)
         row.addWidget(summarise)
+        row.addWidget(population)
         form.addRow(row)
         layout.addWidget(box)
 

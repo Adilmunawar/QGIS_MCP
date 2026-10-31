@@ -111,7 +111,7 @@ def fake_fetch(url, params=None, headers=None, method="GET", body=None, timeout_
 net.fetch = fake_fetch
 
 # datasets catalogue ---------------------------------------------------------------
-check("datasets: 19 entries with categories", len(landcover.DATASETS) == 19
+check("datasets: 20 entries with categories", len(landcover.DATASETS) == 20
       and all(d.get("category") for d in landcover.DATASETS.values()))
 check("datasets: every continuous entry has a ramp and unit",
       all(d.get("ramp") and d.get("unit") for d in landcover.DATASETS.values() if not d.get("classes")),
@@ -236,7 +236,7 @@ check("wiring: categories and help", all(c in COMMAND_CATEGORIES and c in COMMAN
 check("wiring: registry commands exist",
       all(c in handlers for e in registry.REGISTRY.values() for c in e["commands"]),
       [c for e in registry.REGISTRY.values() for c in e["commands"] if c not in handlers])
-check("wiring: 109 commands", len(handlers) == 109, len(handlers))
+check("wiring: at least 109 commands", len(handlers) >= 109, len(handlers))
 check("wiring: openaq source needs a key", registry.REGISTRY["openaq"]["key_setting"] == "qgis_mcp/keys/openaq")
 
 

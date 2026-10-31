@@ -1721,6 +1721,135 @@ def get_live_monitor_status(ctx: Context, limit: int = 50) -> str:
 
 
 # ---------------------------------------------------------------------
+# sensors, population and 3D Tiles
+# ---------------------------------------------------------------------
+@mcp.tool()
+@with_aoi_doc
+def fetch_river_gauges(ctx: Context, aoi: dict, name: Optional[str] = None) -> str:
+    """USGS stream gauges in the area with current discharge (m³/s and ft³/s),
+    stage and water temperature, as a point layer. United States only; the
+    area must be under 25 square degrees.
+    """
+    params: Dict[str, Any] = {"aoi": aoi}
+    if name:
+        params["name"] = name
+    return _call("fetch_river_gauges", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def fetch_buoys(ctx: Context, aoi: Optional[dict] = None, name: Optional[str] = None) -> str:
+    """NOAA NDBC buoys and coastal stations with their latest wind, wave,
+    pressure and sea temperature observation, worldwide; omit aoi for all.
+    """
+    params: Dict[str, Any] = {}
+    if aoi:
+        params["aoi"] = aoi
+    if name:
+        params["name"] = name
+    return _call("fetch_buoys", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def fetch_tide_stations(ctx: Context, aoi: dict, name: Optional[str] = None,
+                        max_latest: int = 20) -> str:
+    """NOAA tide stations in the area with the latest water level above MLLW
+    (United States coasts). Readings are fetched for the first max_latest stations.
+    """
+    params: Dict[str, Any] = {"aoi": aoi, "max_latest": max_latest}
+    if name:
+        params["name"] = name
+    return _call("fetch_tide_stations", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def fetch_aircraft(ctx: Context, aoi: dict, name: Optional[str] = None,
+                   max_aircraft: int = 500) -> str:
+    """Aircraft positions right now from the OpenSky Network: callsign, country,
+    altitude, speed, heading. Anonymous access is rate limited, so call sparingly.
+    """
+    params: Dict[str, Any] = {"aoi": aoi, "max_aircraft": max_aircraft}
+    if name:
+        params["name"] = name
+    return _call("fetch_aircraft", params)
+
+
+@mcp.tool()
+def list_sensorthings_servers(ctx: Context) -> str:
+    """Verified public OGC SensorThings servers (presets) and which entity
+    sets can be mapped. Any other server works by url."""
+    return _call("list_sensorthings_servers")
+
+
+@mcp.tool()
+def discover_sensorthings(ctx: Context, url: Optional[str] = None,
+                          preset: Optional[str] = None) -> str:
+    """What a SensorThings server offers: entity sets, location count and a
+    sample. Pass url (ending in v1.0 or v1.1) or a preset id.
+    """
+    params: Dict[str, Any] = {}
+    if url:
+        params["url"] = url
+    if preset:
+        params["preset"] = preset
+    return _call("discover_sensorthings", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def add_sensorthings_layer(ctx: Context, url: Optional[str] = None, preset: Optional[str] = None,
+                           entity: str = "Location", aoi: Optional[dict] = None,
+                           feature_limit: int = 1000, expand_to: Optional[str] = None,
+                           name: Optional[str] = None, geometry_type: str = "point",
+                           snapshot: Optional[bool] = None) -> str:
+    """Add a SensorThings entity set (Location, Datastream or FeatureOfInterest)
+    as a live layer through QGIS's own provider; with an aoi the server filters
+    to the area. expand_to such as "Thing:$top=1" adds related fields.
+    geometry_type picks which geometries to show (point, line, polygon and
+    their multi forms); stations are points. Servers the provider cannot
+    drive (GOST, such as Samen Meten) get a REST snapshot of their Locations
+    instead; snapshot=true forces that, false forbids it.
+    """
+    params: Dict[str, Any] = {"entity": entity, "feature_limit": feature_limit,
+                              "geometry_type": geometry_type}
+    if snapshot is not None:
+        params["snapshot"] = snapshot
+    for key, value in (("url", url), ("preset", preset), ("aoi", aoi),
+                       ("expand_to", expand_to), ("name", name)):
+        if value:
+            params[key] = value
+    return _call("add_sensorthings_layer", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def estimate_population(ctx: Context, aoi: dict, year: int = 2020, age_sex: bool = False) -> str:
+    """How many people live in the area: WorldPop total for the year (2000 to
+    2020) and the sum of Meta's 30 m population grid, with a combined estimate
+    and density; age_sex adds the WorldPop age and sex pyramid. WorldPop is
+    slow: expect one to three minutes, and call once per area.
+    """
+    return _call("estimate_population", {"aoi": aoi, "year": year, "age_sex": age_sex})
+
+
+@mcp.tool()
+def add_3d_tiles(ctx: Context, url: Optional[str] = None, preset: Optional[str] = None,
+                 name: Optional[str] = None) -> str:
+    """Add a Cesium 3D Tiles scene for 3D map views: preset "google" (Google
+    Photorealistic 3D Tiles, needs a Google Maps Platform key stored with
+    set_data_source_key("google-3d-tiles", key)), preset "cesium-sample", or
+    any https tileset.json url.
+    """
+    params: Dict[str, Any] = {}
+    for key, value in (("url", url), ("preset", preset), ("name", name)):
+        if value:
+            params[key] = value
+    return _call("add_3d_tiles", params)
+
+
+# ---------------------------------------------------------------------
 # entrypoint - keep last: mcp.run() blocks, so any @mcp.tool() defined
 # below this point would never be registered when run as a script.
 # ---------------------------------------------------------------------

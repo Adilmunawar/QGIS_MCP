@@ -12,7 +12,7 @@
 [![QGIS](https://img.shields.io/badge/QGIS-3.22%20to%204.x-589632?logo=qgis&logoColor=white)](https://qgis.org/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6f42c1)](https://modelcontextprotocol.io/)
-[![Plugin 4.3.0](https://img.shields.io/badge/plugin-4.3.0-blue)](CHANGELOG.md)
+[![Plugin 4.4.0](https://img.shields.io/badge/plugin-4.4.0-blue)](CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/adilmunawar/qgis_mcp?style=social)](https://github.com/adilmunawar/qgis_mcp/stargazers)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](#contributing)
 [![Good first issues](https://img.shields.io/github/issues/adilmunawar/qgis_mcp/good%20first%20issue?label=good%20first%20issues)](https://github.com/adilmunawar/qgis_mcp/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -31,9 +31,9 @@ You do not need Claude, an API key or an MCP client to use this toolbox. The **D
   <img src="docs/images/explorer_8_analysis.png" width="31%" alt="Analysis tab: change detection, per polygon statistics, time lapse, report">
 </p>
 <p align="center">
-  <img src="docs/images/explorer_2_elevation.png" width="31%" alt="Elevation tab: Copernicus DEM, terrain products and an elevation profile with chart">
-  <img src="docs/images/explorer_9_3d.png" width="31%" alt="3D tab: extrude buildings, set a DEM as terrain, stream lidar point clouds">
-  <img src="docs/images/explorer_10_monitor.png" width="31%" alt="Monitor tab: feeds refreshed on a timer with threshold alerts">
+  <img src="docs/images/explorer_9_3d.png" width="31%" alt="3D tab: extrude buildings, set a DEM as terrain, stream lidar point clouds and 3D Tiles">
+  <img src="docs/images/explorer_10_sensors.png" width="31%" alt="Sensors tab: river gauges, buoys, tides, aircraft and SensorThings servers">
+  <img src="docs/images/explorer_11_monitor.png" width="31%" alt="Monitor tab: feeds refreshed on a timer with threshold alerts">
 </p>
 
 **Open it**: `Plugins > QGIS MCP > Data Explorer`, or the arrow next to the QGIS MCP toolbar button.
@@ -49,17 +49,18 @@ You do not need Claude, an API key or an MCP client to use this toolbox. The **D
 | Elevation | Copernicus DEM 30 m for the area; slope, aspect, hillshade, roughness, TRI and TPI; elevation profiles across the area or along a selected road or river, with a chart |
 | OpenStreetMap | Twenty one presets (hospitals, schools, roads, buildings, farmland, rivers, parks, power lines and more) or any custom tag, as points or full geometry |
 | Hazards | USGS earthquakes by period and magnitude; NASA FIRMS active fires with a free key; NASA EONET natural events (storms, wildfires, floods, volcanoes, sea ice, dust) |
-| Land and Soil | Nineteen global rasters clipped to the area: ESA WorldCover, Esri land use, CCI land cover, forest map, surface water, four elevation models, MODIS land surface temperature, NDVI, leaf area, evapotranspiration, productivity, snow and burned area, biomass, biodiversity intactness and electrification, each with class shares or statistics; SoilGrids texture, pH, carbon and nitrogen at a point or attached to a layer |
+| Land and Soil | Twenty global rasters clipped to the area: ESA WorldCover, Esri land use, CCI land cover, forest map, surface water, four elevation models, MODIS land surface temperature, NDVI, leaf area, evapotranspiration, productivity, snow and burned area, biomass, biodiversity intactness, electrification and Meta's 30 m population grid, each with class shares or statistics; population of the area from WorldPop with an age pyramid; SoilGrids texture, pH, carbon and nitrogen at a point or attached to a layer |
 | Water | GloFAS river discharge forecast and history, sea state and sea surface temperature, elevation at the area's centre and corners |
 | Boundaries and Species | Administrative units of any country from geoBoundaries, GBIF species observations by taxon, Sensor.Community and OpenAQ air quality stations, GDACS disaster alerts |
 | Analysis | Change detection between two periods with loss and gain shares, per polygon index statistics for any layer, dated scene series for the Temporal Controller, and a one click HTML or PDF area report with map, weather, elevation, land cover, soil and NDVI |
-| 3D | OpenStreetMap buildings fetched and extruded by their height or storey tags, any footprint layer extruded, a DEM set as terrain, USGS lidar point clouds streamed as COPC (United States) or any COPC URL, and a new 3D map view opened with one click |
+| 3D | OpenStreetMap buildings fetched and extruded by their height or storey tags, any footprint layer extruded, a DEM set as terrain, USGS lidar point clouds streamed as COPC (United States) or any COPC URL, Cesium 3D Tiles scenes (Google Photorealistic with a key, or any tileset URL), and a new 3D map view opened with one click |
+| Sensors | USGS river gauges with discharge and stage, NOAA buoys with waves and wind, NOAA tide stations with water levels, aircraft positions right now from OpenSky, and any OGC SensorThings server (Hamburg, Dutch Samen Meten, or your own) as a live layer, whole server or area only |
 | Monitor | Earthquakes, air sensors, weather, GDACS alerts and NASA events refreshed on a timer for the area, with thresholds you set; alerts land in the QGIS message bar and a table |
 | Basemaps | OpenStreetMap, Esri imagery and topo, CARTO, OpenTopoMap, and NASA GIBS daily satellite layers by date |
 | Sources | Every data source with its licence and whether it needs a key; paste keys here |
 | Log | A timestamped record of everything the panel did |
 
-Every layer the panel creates carries provenance metadata (source, query, time, licence) and fetched vectors are written to GeoPackage, so they survive saving the project. All sources are public and keyless except NASA FIRMS and OpenAQ, which need free keys.
+Every layer the panel creates carries provenance metadata (source, query, time, licence) and fetched vectors are written to GeoPackage, so they survive saving the project. All sources are public and keyless except NASA FIRMS, OpenAQ and Google 3D Tiles, which need free keys.
 
 ## QGIS MCP server: an AI assistant for QGIS
 
@@ -134,7 +135,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 
 **Data Explorer dashboard (no AI required)**
 - A dock panel inside QGIS: pick an area of interest by typing a place, drawing a rectangle on the map, using the current view, a layer's extent or its selected features.
-- Fourteen tabs: Imagery, Weather, Elevation, OpenStreetMap, Hazards, Land and Soil, Water, Boundaries and Species, Analysis, 3D, Monitor, Basemaps, Sources and a Log; every fetch runs as a background task with a progress bar and Cancel, so QGIS never freezes.
+- Fifteen tabs: Imagery, Weather, Elevation, OpenStreetMap, Hazards, Land and Soil, Water, Boundaries and Species, Analysis, 3D, Sensors, Monitor, Basemaps, Sources and a Log; every fetch runs as a background task with a progress bar and Cancel, so QGIS never freezes.
 - Search Sentinel-2 or Landsat scenes, stream true colour or chosen bands, compute NDVI and other indices with one click, build index time series, add DEMs and derive hillshade or slope, fetch OSM presets such as hospitals, roads, buildings and farmland, pull weather for the area centre or attach it to every feature of a layer.
 - Open it from the QGIS MCP toolbar button menu or `Plugins > QGIS MCP > Data Explorer`.
 
@@ -146,9 +147,11 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 - **Places and OpenStreetMap**: Nominatim geocoding both ways, administrative boundaries as layers, any OSM feature type by tag through Overpass.
 - **Hazards**: USGS earthquakes for the last hour to month, NASA FIRMS active fires (free key), NASA EONET natural events with tracks.
 - **Basemaps**: OSM, Esri imagery and topo, CARTO, OpenTopoMap, and NASA GIBS daily satellite layers (true colour, NDVI, fires, snow, night lights, rainfall) selectable by date.
-- **Land and soil**: nineteen global rasters clipped to the area (ESA WorldCover, Esri land use, CCI land cover, ALOS forest map, JRC surface water, NASADEM, ALOS and Copernicus DEMs, 3DEP height above ground, MODIS land surface temperature, NDVI, leaf area, evapotranspiration, productivity, snow cover and burned area, harmonised biomass, Biodiversity Intactness Index, HREA electrification) with class shares in km² or statistics in physical units; SoilGrids texture, pH, carbon, nitrogen and water retention at a point or attached to features.
+- **Land and soil**: twenty global rasters clipped to the area (ESA WorldCover, Esri land use, CCI land cover, ALOS forest map, JRC surface water, NASADEM, ALOS and Copernicus DEMs, 3DEP height above ground, MODIS land surface temperature, NDVI, leaf area, evapotranspiration, productivity, snow cover and burned area, harmonised biomass, Biodiversity Intactness Index, HREA electrification, Meta population density) with class shares in km² or statistics in physical units; SoilGrids texture, pH, carbon, nitrogen and water retention at a point or attached to features.
 - **Climate**: seven CMIP6 HighResMIP models to 2050 with ensemble means and decade trends; seasonal outlooks up to nine months with member spread.
-- **3D**: building footprints extruded by height or storey tags, any DEM as terrain, USGS 3DEP lidar as streamed COPC point clouds, 3D map views opened on request; elevation profiles with charts along any line.
+- **3D**: building footprints extruded by height or storey tags, any DEM as terrain, USGS 3DEP lidar as streamed COPC point clouds, Cesium 3D Tiles (Google Photorealistic with a key or any tileset), 3D map views opened on request; elevation profiles with charts along any line.
+- **Sensor networks**: USGS river gauges, NOAA buoys and tide stations, OpenSky aircraft positions, and any OGC SensorThings server as a live layer through the native QGIS provider.
+- **Population**: WorldPop totals and age and sex pyramids for any area, cross checked against Meta's 30 m grid.
 - **Live monitor**: earthquakes, air sensors, weather, GDACS alerts and NASA EONET events refreshed on a timer for an area, with threshold alerts in the message bar and the audit log.
 - **Water**: GloFAS river discharge forecast and history, sea state and sea surface temperature, elevation at any points.
 - **Boundaries, species and sensors**: geoBoundaries administrative units for every country, GBIF species observations by taxon, Sensor.Community and OpenAQ (free key) air quality stations, GDACS disaster alerts.
@@ -363,7 +366,7 @@ You have access to QGIS tools. Please:
 
 ## Tool reference
 
-The MCP server exposes **109 tools**. The **Risk** column is the category from [`permissions.py`](qgis_mcp_plugin/permissions.py); it decides what each [permission profile](#permission-profiles) does with the tool. `render_map_image` is a wrapper on the client side over the plugin command `render_map_base64` (read).
+The MCP server exposes **118 tools**. The **Risk** column is the category from [`permissions.py`](qgis_mcp_plugin/permissions.py); it decides what each [permission profile](#permission-profiles) does with the tool. `render_map_image` is a wrapper on the client side over the plugin command `render_map_base64` (read).
 
 
 #### Diagnostics and audit
@@ -572,6 +575,20 @@ Every live data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place"
 | `stop_live_monitor` | Stop the live monitor. | `write` |
 | `get_live_monitor_status` | Monitor configuration, counts per source and recent alerts. | `read` |
 
+#### Toolbox: sensor networks, population and 3D Tiles
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `fetch_river_gauges` | USGS stream gauges with current discharge, stage and water temperature (United States). | `write` |
+| `fetch_buoys` | NOAA buoys and coastal stations with the latest wind, waves, pressure and sea temperature. | `write` |
+| `fetch_tide_stations` | NOAA tide stations with the latest water level (United States coasts). | `write` |
+| `fetch_aircraft` | Aircraft positions right now from the OpenSky Network. | `write` |
+| `list_sensorthings_servers` | Verified public OGC SensorThings servers and mappable entity sets. | `read` |
+| `discover_sensorthings` | Entity sets, location count and a sample from a SensorThings server. | `read` |
+| `add_sensorthings_layer` | A SensorThings entity set as a live layer, optionally filtered to the area. | `write` |
+| `estimate_population` | People in the area from WorldPop and Meta's 30 m grid, with an optional age pyramid. | `read` |
+| `add_3d_tiles` | Cesium 3D Tiles scene: Google Photorealistic (key), the Cesium sample, or any tileset URL. | `write` |
+
 
 > Commands missing from the permission table are treated as `destructive`, so new commands fail closed.
 
@@ -619,11 +636,18 @@ The headless tests run inside QGIS's own Python, with no GUI. On Windows with QG
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_toolbox_headless.py
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_explorer_headless.py
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_advanced_headless.py
+"C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_sensors_headless.py
 ```
 
-The live data, toolbox, advanced and explorer suites import the plugin from the checkout and stub every HTTP call, so they need no network; add `--online` to the explorer suite for a real network scenario. The four older suites import the plugin from the QGIS 4 profile (`%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins`), so copy the plugin there first. Adjust the QGIS path for your install location. Together the suites run about 460 checks.
+The live data, toolbox, advanced, sensors and explorer suites import the plugin from the checkout and stub every HTTP call, so they need no network; add `--online` to the explorer suite for a real network scenario. The four older suites import the plugin from the QGIS 4 profile (`%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins`), so copy the plugin there first. Adjust the QGIS path for your install location. Together the suites run about 500 checks.
 
 ## Roadmap
+
+Shipped in 4.4.0:
+
+- [x] **Sensor networks**: USGS river gauges, NOAA buoys and tides, OpenSky aircraft, any OGC SensorThings server as a live layer
+- [x] **Population**: WorldPop totals and age pyramids, Meta's 30 m population grid as a dataset
+- [x] **3D Tiles**: Google Photorealistic 3D Tiles with a key, or any Cesium tileset
 
 Shipped in 4.3.0:
 
@@ -653,10 +677,9 @@ Shipped in 4.1.0:
 
 Next:
 
-- [ ] **More sensor networks**: OGC SensorThings, USGS river gauges, NDBC buoys, NOAA tides
-- [ ] **3D Tiles and scenes**: Google and Cesium 3D Tiles, Overture buildings, scene export
-- [ ] **Population**: WorldPop and GHSL grids once a streamable source is available
-- [ ] **More sources**: Copernicus Data Space (Sentinel-5P, Sentinel-3), FAO WaPOR, CHIRPS rainfall, Sentinel-1 RTC backscatter
+- [ ] **More SensorThings presets** and OGC API Features and EDR servers, AIS ships
+- [ ] **Overture buildings** and scene export from 3D views
+- [ ] **More sources**: Copernicus Data Space (Sentinel-5P, Sentinel-3), FAO WaPOR, CHIRPS rainfall, Sentinel-1 RTC backscatter, GHSL built up grids
 
 Track progress in the [CHANGELOG](CHANGELOG.md) and the issue tracker.
 

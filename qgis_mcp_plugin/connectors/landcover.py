@@ -223,6 +223,14 @@ DATASETS = {
         "licence": "CC BY 4.0", "attribution": "Impact Observatory, Vizzuality (Biodiversity Intactness Index)",
         "description": "How much of the original species community is estimated to remain, from 0 (none) to 1 (intact).",
     },
+    "population": {
+        "name": "Meta high resolution population density (30 m)", "category": "settlements",
+        "catalogue": "direct", "url": "https://dataforgood-fb-data.s3.amazonaws.com/hrsl-cogs/hrsl_general/hrsl_general-latest.vrt",
+        "classes": None, "nodata": None, "unit": "people per 30 m cell", "valid_range": (0, 100000),
+        "ramp": RAMP_HEAT, "summary": "sum", "source_id": "meta-hrsl",
+        "licence": "CC BY 4.0", "attribution": "Meta Data for Good, High Resolution Settlement Layer (with CIESIN)",
+        "description": "Estimated residents per 30 m cell from satellite building detection and census totals; summing the cells gives the population of the area.",
+    },
     "electrification": {
         "name": "High Resolution Electricity Access 2019 (lightscore)", "category": "settlements",
         "catalogue": PC, "collection": "hrea", "latest": True,
@@ -256,6 +264,8 @@ def dataset_hrefs(dataset_id, bbox):
         raise ValueError(f"Unknown dataset '{dataset_id}'. Use one of {sorted(DATASETS)}")
     if spec["catalogue"] is None:
         return spec, [WORLDCOVER_URL.format(tile=t) for t in worldcover_tiles(bbox)]
+    if spec["catalogue"] == "direct":
+        return spec, [spec["url"]]
     found = stac.search(bbox, spec["collection"], None, None, None, 100,
                         spec["catalogue"], keep_assets=True)
     items = found["items"]
@@ -358,7 +368,8 @@ def build_vrt(path, hrefs, bbox, nodata=None, materialise=False, spec=None):
     options = gdal.WarpOptions(
         format="GTiff" if materialise else "VRT",
         outputBounds=[west, south, east, north], outputBoundsSRS="EPSG:4326",
-        dstSRS=dst_srs, xRes=xres, yRes=yres, resampleAlg="near",
+        dstSRS=dst_srs, xRes=xres, yRes=yres,
+        resampleAlg="sum" if (spec or {}).get("summary") == "sum" else "near",
         srcNodata=nodata, dstNodata=dst_nodata, multithread=True,
         creationOptions=["COMPRESS=DEFLATE", "TILED=YES"] if materialise else None)
     result = gdal.Warp(path, sources, options=options)
@@ -506,6 +517,7 @@ def continuous_summary(path, nodata=None, threshold=None, max_pixels=4_000_000):
         "p75": round(float(pct[3]), 4), "p98": round(float(pct[4]), 4),
         "area_km2": round(valid.size * px_km2, 3),
     }
+    out["sum"] = round(float(valid.sum()) * scale * scale, 2)
     if threshold is not None:
         above = int((valid > threshold).sum())
         out["above_threshold"] = threshold
@@ -541,7 +553,32 @@ def summarise(path, spec):
         out = surface_water_summary(path, spec.get("nodata") if spec.get("nodata") is not None else 255)
         return landcover_summary_label("water", out)
     nodata = OUTPUT_NODATA if _needs_conversion(spec) else spec.get("nodata")
-    return landcover_summary_label("continuous", continuous_summary(path, nodata, spec.get("threshold")))
+    summary = continuous_summary(path, nodata, spec.get("threshold"))
+    if spec.get("summary") == "sum":
+        summary["sum"] = raster_sum(path, nodata)
+        summary["total"] = int(round(summary["sum"]))
+        summary["note"] = ("total is the exact sum of the cells in the area; a very large area is "
+                           "coarsened with sum resampling, which keeps the total")
+    return landcover_summary_label("continuous", summary)
+
+
+def raster_sum(path, nodata=None, rows=1024):
+    """Exact sum of valid cells, read in row blocks at native resolution."""
+    ds = gdal.Open(path)
+    if ds is None:
+        raise IOError(f"Could not open {path}")
+    band = ds.GetRasterBand(1)
+    nd = band.GetNoDataValue() if nodata is None else nodata
+    total = 0.0
+    for y in range(0, ds.RasterYSize, rows):
+        h = min(rows, ds.RasterYSize - y)
+        block = band.ReadAsArray(0, y, ds.RasterXSize, h).astype("float64")
+        mask = np.isfinite(block)
+        if nd is not None:
+            mask &= block != nd
+        total += float(block[mask].sum())
+    ds = None
+    return round(total, 2)
 
 
 def landcover_summary_label(kind, summary):

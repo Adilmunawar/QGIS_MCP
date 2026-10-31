@@ -1,7 +1,7 @@
 [general]
 name=QGIS MCP Bridge
-description=Open data toolbox for QGIS: a Data Explorer with 14 tabs for live satellite imagery, 19 global rasters, weather and climate, elevation and 3D, OpenStreetMap, hazards and a live monitor, plus a permission gated MCP bridge so Claude and other AI agents can drive QGIS
-version=4.3.0
+description=Open data toolbox for QGIS: a Data Explorer with 15 tabs for live satellite imagery, 20 global rasters, weather and climate, elevation and 3D, OpenStreetMap, hazards, sensor networks, population and a live monitor, plus a permission gated MCP bridge so Claude and other AI agents can drive QGIS
+version=4.4.0
 qgisMinimumVersion=3.22
 qgisMaximumVersion=4.99
 supportsQt6=True
@@ -9,13 +9,14 @@ author=Adil Munawar
 email=adilmunawarx@gmail.com
 category=Plugins
 icon=icon.png
-tags=mcp,ai,claude,llm,agent,automation,sentinel,ndvi,weather,openstreetmap,remote sensing,3d,lidar,climate,land cover,modis
+tags=mcp,ai,claude,llm,agent,automation,sentinel,ndvi,weather,openstreetmap,remote sensing,3d,lidar,climate,land cover,modis,sensorthings,population,3d tiles
 homepage=https://github.com/adilmunawar/qgis_mcp
 tracker=https://github.com/adilmunawar/qgis_mcp/issues
 repository=https://github.com/adilmunawar/qgis_mcp
 experimental=False
 hasProcessingProvider=no
-changelog=4.3.0 - Advanced release: 3D and Monitor tabs; 15 more global rasters (CCI land cover, forest, ALOS and Copernicus 90 m DEMs, MODIS temperature, NDVI, leaf area, evapotranspiration, productivity, snow, burned area, biomass, biodiversity, electrification, 3DEP height); climate projections and seasonal outlooks; elevation profiles; 3D buildings, terrain and lidar point clouds; NASA EONET events; OpenAQ; live monitor with alerts; PDF reports. 109 MCP tools.
+changelog=4.4.0 - Sensors release: Sensors tab with USGS river gauges, NOAA buoys and tide stations, OpenSky aircraft and any OGC SensorThings server as a live layer; population estimates from WorldPop and Meta's 30 m grid with age pyramids; Cesium 3D Tiles including Google Photorealistic with a key. 118 MCP tools.
+ 4.3.0 - Advanced release: 3D and Monitor tabs; 15 more global rasters (CCI land cover, forest, ALOS and Copernicus 90 m DEMs, MODIS temperature, NDVI, leaf area, evapotranspiration, productivity, snow, burned area, biomass, biodiversity, electrification, 3DEP height); climate projections and seasonal outlooks; elevation profiles; 3D buildings, terrain and lidar point clouds; NASA EONET events; OpenAQ; live monitor with alerts; PDF reports. 109 MCP tools.
  4.2.0 - Toolbox release: Land and Soil, Water, Boundaries and Species and Analysis tabs; ESA WorldCover, Esri land use, JRC surface water, NASADEM, SoilGrids, GloFAS, marine, geoBoundaries, GBIF, Sensor.Community, GDACS; change detection, zonal statistics, temporal series, HTML area report. 96 MCP tools.
  4.1.0 - Data Explorer dashboard with AOI picker and background tasks. Live data connectors: Sentinel-2/Landsat via STAC, spectral indices, Copernicus DEM, Open-Meteo and NASA POWER weather, Nominatim geocoding, Overpass OSM, USGS earthquakes, NASA FIRMS, GIBS basemaps.
  4.0.0 - Permission profiles, approval queue, audit log, pairing token, 60 commands.

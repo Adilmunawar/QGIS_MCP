@@ -1,6 +1,6 @@
 [project]
 name = "qgis-mcp"
-version = "4.3.0"
+version = "4.4.0"
 description = "MCP server and QGIS plugin that let Claude and other AI agents drive QGIS, with a Data Explorer for live satellite imagery, weather, elevation and OpenStreetMap data"
 readme = "README.md"
 license = { file = "LICENSE" }

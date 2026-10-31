@@ -256,6 +256,56 @@ source("live-monitor", "Live monitor (earthquakes, sensors, weather, alerts, eve
        description="Timer driven refresh of the feeds above for an area, with threshold alerts.",
        commands=["start_live_monitor", "stop_live_monitor", "get_live_monitor_status"])
 
+source("usgs-nwis", "USGS stream gauges (NWIS)", SENSORS,
+       licence="Public domain (USGS)",
+       description="Instantaneous discharge, stage and water temperature from thousands of gauges, United States.",
+       commands=["fetch_river_gauges"], docs="https://waterservices.usgs.gov/")
+
+source("ndbc", "NOAA National Data Buoy Center", SENSORS,
+       licence="Public domain (NOAA)",
+       description="Latest wind, waves, pressure and sea temperature from buoys and coastal stations worldwide.",
+       commands=["fetch_buoys"], docs="https://www.ndbc.noaa.gov/")
+
+source("noaa-coops", "NOAA tides and currents (CO-OPS)", SENSORS,
+       licence="Public domain (NOAA)",
+       description="Water level stations with the latest reading, United States coasts.",
+       commands=["fetch_tide_stations"], docs="https://api.tidesandcurrents.noaa.gov/api/prod/")
+
+source("opensky", "OpenSky Network aircraft positions", SENSORS,
+       licence="CC BY-SA 4.0; anonymous use rate limited",
+       description="Live aircraft positions, altitude, speed and heading from volunteer receivers.",
+       commands=["fetch_aircraft"], docs="https://openskynetwork.github.io/opensky-api/",
+       attribution="The OpenSky Network")
+
+source("sensorthings", "OGC SensorThings servers", SENSORS,
+       licence="Per server",
+       description="Any OGC SensorThings API server as a live layer through the QGIS provider; presets for Hamburg and the Dutch Samen Meten network.",
+       commands=["list_sensorthings_servers", "discover_sensorthings", "add_sensorthings_layer"],
+       docs="https://www.ogc.org/standards/sensorthings")
+
+source("worldpop", "WorldPop population statistics", LAND,
+       licence="CC BY 4.0",
+       description="Population totals and age and sex pyramids for any polygon, 2000 to 2020.",
+       commands=["estimate_population"], docs="https://www.worldpop.org/sdi/introapi/",
+       attribution="WorldPop (www.worldpop.org)")
+
+source("meta-hrsl", "Meta high resolution population density", LAND,
+       licence="CC BY 4.0",
+       description="People per 30 m cell from building detection, streamed from AWS Open Data.",
+       commands=["add_dataset", "estimate_population"],
+       docs="https://dataforgood.facebook.com/dfg/tools/high-resolution-population-density-maps",
+       attribution="Meta Data for Good, High Resolution Settlement Layer")
+
+source("google-3d-tiles", "Google Photorealistic 3D Tiles", THREE_D,
+       licence="Google Maps Platform terms", auth="free key", key_setting="qgis_mcp/keys/google_maps",
+       description="Photorealistic 3D mesh of cities worldwide, billed per session beyond the free tier.",
+       commands=["add_3d_tiles"], docs="https://developers.google.com/maps/documentation/tile/3d-tiles")
+
+source("cesium-3d-tiles", "Cesium 3D Tiles (any tileset URL)", THREE_D,
+       licence="Per tileset",
+       description="Any public 3D Tiles tileset.json: city models, scanned sites, point cloud tiles.",
+       commands=["add_3d_tiles"], docs="https://github.com/CesiumGS/3d-tiles")
+
 source("copernicus-dem", "Copernicus DEM GLO-30", ELEVATION,
        licence="Copernicus DEM licence (free, attribution)",
        description="30 m global elevation, streamed from Earth Search.",

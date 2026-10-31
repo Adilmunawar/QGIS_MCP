@@ -108,6 +108,9 @@ COMMAND_CATEGORIES = {
     "get_seasonal_forecast": READ,
     "get_elevation_profile": READ,
     "get_live_monitor_status": READ,
+    "list_sensorthings_servers": READ,
+    "discover_sensorthings": READ,
+    "estimate_population": READ,
     # write - changes the session or the view, reversible in practice
     "add_vector_layer": WRITE,
     "add_raster_layer": WRITE,
@@ -162,6 +165,12 @@ COMMAND_CATEGORIES = {
     "fetch_air_quality_stations": WRITE,
     "start_live_monitor": WRITE,
     "stop_live_monitor": WRITE,
+    "fetch_river_gauges": WRITE,
+    "fetch_buoys": WRITE,
+    "fetch_tide_stations": WRITE,
+    "fetch_aircraft": WRITE,
+    "add_sensorthings_layer": WRITE,
+    "add_3d_tiles": WRITE,
     # destructive - discards data, or overwrites something on disk
     "open_3d_view": DESTRUCTIVE,  # can crash QGIS without a real GPU
     "delete_features": DESTRUCTIVE,
