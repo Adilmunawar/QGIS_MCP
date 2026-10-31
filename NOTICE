@@ -30,3 +30,14 @@ Third party data sources accessed by the software (Copernicus, NASA, NOAA,
 USGS, ESA, Meta Data for Good, WorldPop, OpenStreetMap contributors, Open-Meteo,
 ISRIC, GBIF, JRC and others) keep their own licences and attribution rules,
 which the software records on every layer it creates.
+
+Licence statement
+-----------------
+QGIS MCP is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. It is distributed WITHOUT ANY WARRANTY; see the LICENSE file for the
+full text. The attribution requirements above are additional terms permitted
+by section 7 of the GNU GPL version 3 (preservation of author attribution and
+legal notices). Versions published before 4.5.0 were released under the MIT
+License and remain available under it.

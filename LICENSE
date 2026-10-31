@@ -1,27 +1,3 @@
-QGIS MCP: open data toolbox and MCP bridge for QGIS
-Copyright (c) 2026 Adil Munawar
-
-This program is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the Free
-Software Foundation, either version 3 of the License, or (at your option)
-any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License below
-for more details.
-
-Additional terms under section 7 of the GNU GPL v3: the author attribution
-and the legal notices listed in the NOTICE file must be preserved in copies
-and derived works, and the origin of derived works must be stated as set out
-there. Portions received from jjsantos01/qgis_mcp under the MIT License are
-acknowledged in LICENSE-MIT-upstream.
-
-Versions published before 4.5.0 were released under the MIT License and
-remain available under it.
-
-------------------------------------------------------------------------
-
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
