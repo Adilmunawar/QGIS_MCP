@@ -7,7 +7,23 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ## [Unreleased]
 
 ### Planned
-- Sensor feeds (OGC SensorThings, OpenAQ, river gauges), change detection, 3D buildings and point clouds, background jobs with progress. See the roadmap in the README.
+- OGC SensorThings and river gauges, Copernicus Data Space, population grids, Overture buildings, 3D Tiles. See the roadmap in the README.
+
+## [4.3.0] - Advanced release
+
+### Added
+- **Data Explorer tabs** `3D` and `Monitor` (`qgis_mcp_plugin/explorer_advanced.py`), climate projection and seasonal outlook buttons on the Weather tab, an elevation profile box on the Elevation tab, a natural events box on the Hazards tab and an OpenAQ button beside the community sensors. Fourteen tabs in all.
+- **15 more global rasters** in `connectors/landcover.py`, all through Planetary Computer: ESA CCI land cover (22 classes), ALOS PALSAR forest / non forest, ALOS World 3D and Copernicus 90 m elevation, USGS 3DEP height above ground, MODIS land surface temperature, NDVI, leaf area index, evapotranspiration, net primary productivity, snow cover and burned area, harmonised above ground biomass, Biodiversity Intactness Index and HREA electrification. Continuous datasets are converted to physical units (scale, offset, valid range, decibels) and styled with a colour ramp; `summarise_land_cover` returns statistics, class shares or wet fractions as appropriate.
+- Planetary Computer signing now uses one cached SAS token per collection, verified with a ranged read and refreshed before expiry, with backoff on throttling.
+- `connectors/weather.py`: `climate_projection` (seven CMIP6 HighResMIP models, yearly ensemble means and decade trend) and `seasonal_forecast` (ensemble mean, minimum and maximum, weekly blocks). `connectors/events.py`: NASA EONET natural events. `connectors/airquality.py`: OpenAQ v3 with a stored key.
+- `qgis_mcp_plugin/advanced_commands.py` and `monitor.py`: 13 new commands and MCP tools (109 total): `get_climate_projection`, `get_seasonal_forecast`, `get_elevation_profile` (chart image, gain, loss, grade; from WKT, a layer feature, points or a transect through the area), `make_3d_buildings`, `add_3d_buildings`, `set_terrain`, `add_point_cloud` (USGS 3DEP COPC tiles or any COPC URL), `open_3d_view`, `fetch_natural_events`, `fetch_air_quality_stations`, `start_live_monitor`, `stop_live_monitor`, `get_live_monitor_status`.
+- `export_area_report` writes a PDF when the path ends in `.pdf`.
+- `open_3d_view` is categorised destructive and needs `confirm=true`: creating a 3D canvas from a script crashed QGIS on a remote desktop session during testing; the Data Explorer asks before opening one.
+- `tests/test_advanced_headless.py` (66 offline checks); the explorer suite grows to 47 checks covering the new tabs.
+
+### Changed
+- `list_datasets` takes a `category` and reports the kind, unit and valid range of each dataset; `add_dataset` is split into `dataset_prepare` and `dataset_apply` so the dashboard and the MCP server share one code path.
+- `pyproject.toml`, `metadata.txt` and the plugin report version 4.3.0.
 
 ## [4.2.0] - Toolbox release
 

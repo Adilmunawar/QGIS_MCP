@@ -137,7 +137,8 @@ def summarise_item(feature, catalogue="earth-search", keep_assets=False):
         "id": feature.get("id"),
         "collection": feature.get("collection"),
         "catalogue": catalogue,
-        "datetime": props.get("datetime"),
+        "datetime": props.get("datetime") or props.get("start_datetime"),
+        "end_datetime": props.get("end_datetime"),
         "cloud_cover": props.get("eo:cloud_cover"),
         "platform": props.get("platform"),
         "epsg": props.get("proj:epsg") or props.get("proj:code"),
@@ -191,9 +192,81 @@ def asset_href(item, asset_key, catalogue="earth-search"):
             f"{sorted(k for k in assets if not k.endswith('-jp2'))}")
     href = check_href(asset["href"])
     if catalogue == "planetary-computer":
-        signed = net.get_json(PC_SIGN, {"href": href})
-        href = check_href(signed.get("href", href))
+        href = check_href(sign_href(href, item.get("collection")))
     return href, asset
+
+
+PC_TOKEN = "https://planetarycomputer.microsoft.com/api/sas/v1/token/{collection}"
+_TOKENS = {}
+_TOKEN_FAILED = {}
+TOKEN_RETRY_AFTER_S = 600
+SIGN_RETRIES = (2, 5, 10)
+
+
+def _retrying(fn):
+    """Planetary Computer throttles anonymous signing; back off on 429."""
+    import time
+    for pause in SIGN_RETRIES + (None,):
+        try:
+            return fn()
+        except net.HttpError as exc:
+            if exc.status != 429 or pause is None:
+                raise
+            time.sleep(pause)
+
+
+def _token_works(href, token):
+    """One ranged byte read: the token service has served stale tokens."""
+    try:
+        net.fetch(f"{href}{'&' if '?' in href else '?'}{token}",
+                  headers={"Range": "bytes=0-0"}, timeout_ms=20_000)
+        return True
+    except net.HttpError:
+        return False
+
+
+def sign_href(href, collection=None):
+    """Sign a Planetary Computer asset URL.
+
+    One SAS token per collection is fetched and cached until shortly before
+    it expires, so mosaicking many tiles costs one signing call rather than
+    one per tile. Falls back to the per URL signing endpoint when the
+    collection is unknown or the token endpoint refuses.
+    """
+    import datetime as _dt
+    if "?" in href and "sig=" in href:
+        return href
+    import time as _time
+    if collection and _time.monotonic() - _TOKEN_FAILED.get(collection, -1e9) < TOKEN_RETRY_AFTER_S:
+        collection = None  # the token service failed for it recently; sign per URL
+    if collection:
+        entry = _TOKENS.get(collection)
+        now = _dt.datetime.now(_dt.timezone.utc)
+        if entry is None or entry[1] <= now + _dt.timedelta(minutes=5):
+            try:
+                data = _retrying(lambda: net.get_json(PC_TOKEN.format(collection=collection)))
+                expiry = data.get("msft:expiry")
+                when = (_dt.datetime.fromisoformat(expiry.replace("Z", "+00:00"))
+                        if expiry else now + _dt.timedelta(minutes=45))
+                if when.tzinfo is None:
+                    when = when.replace(tzinfo=_dt.timezone.utc)
+                # The token service sometimes hands out an already expired
+                # token for a collection; those are useless, so fall through
+                # to per URL signing instead of caching them.
+                entry = (data.get("token"), when) if when > now + _dt.timedelta(minutes=5) else None
+                if entry and not _token_works(href, entry[0]):
+                    entry = None
+                if entry:
+                    _TOKENS[collection] = entry
+                else:
+                    _TOKEN_FAILED[collection] = _time.monotonic()
+            except (net.HttpError, ValueError):
+                entry = None
+                _TOKEN_FAILED[collection] = _time.monotonic()
+        if entry and entry[0]:
+            return f"{href}{'&' if '?' in href else '?'}{entry[0]}"
+    signed = _retrying(lambda: net.get_json(PC_SIGN, {"href": href}))
+    return signed.get("href", href)
 
 
 def check_href(href):

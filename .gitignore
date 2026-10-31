@@ -14,3 +14,6 @@ tests/projects/*.qgz
 tests/projects/*.png
 tests/projects/*_log.json
 .venv/
+
+# GUI scenario captures
+tests/projects/gui43/

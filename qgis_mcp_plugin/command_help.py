@@ -114,7 +114,21 @@ COMMAND_HELP = {
     "compute_index_change": "Index difference between two periods: loss and gain.",
     "zonal_index_statistics": "Mean index per polygon of a layer.",
     "add_imagery_series": "Several dated scenes for the temporal controller.",
-    "export_area_report": "HTML briefing: map, weather, land cover, soil, NDVI.",
+    "export_area_report": "HTML or PDF briefing: map, weather, land cover, soil, NDVI.",
+    # advanced toolbox
+    "get_climate_projection": "CMIP6 yearly temperature and rainfall to 2050, seven models.",
+    "get_seasonal_forecast": "Ensemble outlook up to nine months, daily and weekly.",
+    "get_elevation_profile": "Elevation along a line with gain, loss and a chart.",
+    "make_3d_buildings": "Extrude a footprint layer by height or levels for 3D views.",
+    "add_3d_buildings": "Fetch OpenStreetMap buildings in the area and extrude them.",
+    "set_terrain": "Use a DEM layer as the 3D terrain and profile ground.",
+    "add_point_cloud": "USGS 3DEP lidar tiles for the area, or any COPC URL.",
+    "open_3d_view": "Open a new 3D map view (confirm; may crash without a GPU).",
+    "fetch_natural_events": "NASA EONET natural events as a point layer.",
+    "fetch_air_quality_stations": "OpenAQ monitors with latest readings (needs a key).",
+    "start_live_monitor": "Refresh feeds for the area on a timer and raise alerts.",
+    "stop_live_monitor": "Stop the live monitor.",
+    "get_live_monitor_status": "Monitor configuration, counts and recent alerts.",
 }
 
 

@@ -40,6 +40,7 @@ from ._server_core import (
 from .data_commands import DataCommandsMixin
 from .live_commands import LiveDataMixin
 from .toolbox_commands import ToolboxMixin
+from .advanced_commands import AdvancedMixin
 
 _EXPORT_SUCCESS = getattr(
     getattr(QgsLayoutExporter, "ExportResult", QgsLayoutExporter), "Success", 0
@@ -57,7 +58,7 @@ GEOMETRY_KEYWORDS = {
 }
 
 
-class QgisMCPServer(ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
+class QgisMCPServer(AdvancedMixin, ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
     """The full command surface, mounted on the gated transport."""
 
     def _handlers(self):
@@ -174,6 +175,19 @@ class QgisMCPServer(ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
             "zonal_index_statistics": self.zonal_index_statistics,
             "add_imagery_series": self.add_imagery_series,
             "export_area_report": self.export_area_report,
+            "get_climate_projection": self.get_climate_projection,
+            "get_seasonal_forecast": self.get_seasonal_forecast,
+            "get_elevation_profile": self.get_elevation_profile,
+            "make_3d_buildings": self.make_3d_buildings,
+            "add_3d_buildings": self.add_3d_buildings,
+            "set_terrain": self.set_terrain,
+            "add_point_cloud": self.add_point_cloud,
+            "open_3d_view": self.open_3d_view,
+            "fetch_natural_events": self.fetch_natural_events,
+            "fetch_air_quality_stations": self.fetch_air_quality_stations,
+            "start_live_monitor": self.start_live_monitor,
+            "stop_live_monitor": self.stop_live_monitor,
+            "get_live_monitor_status": self.get_live_monitor_status,
         }
 
     # ------------------------------------------------------------------

@@ -54,8 +54,8 @@ class ToolboxTabsMixin:
         box = QGroupBox("Global datasets for the area")
         form = QFormLayout(box)
         self.dataset_combo = QComboBox()
-        for key, spec in landcover.DATASETS.items():
-            self.dataset_combo.addItem(spec["name"], key)
+        for key, spec in sorted(landcover.DATASETS.items(), key=lambda kv: (kv[1].get("category", ""), kv[1]["name"])):
+            self.dataset_combo.addItem(f"{spec.get('category', 'other').title()}: {spec['name']}", key)
         form.addRow("Dataset", self.dataset_combo)
         row = QHBoxLayout()
         add = QPushButton("Add layer")
@@ -95,31 +95,15 @@ class ToolboxTabsMixin:
         if area is None:
             return
         dataset = self.dataset_combo.currentData()
+        commands = self._commands
 
         def work(task):
-            spec, hrefs = landcover.dataset_hrefs(dataset, area.bbox)
-            digest = hashlib.sha1(json.dumps(area.bbox).encode()).hexdigest()[:8]
-            vrt = os.path.join(cache_dir(), f"{_safe_name(dataset)}_{digest}.vrt")
-            vrt = landcover.build_vrt(vrt, hrefs, area.bbox, spec.get("nodata"),
-                                      materialise=spec["catalogue"] is not None)
-            summary = None
-            if spec.get("classes"):
-                summary = landcover.class_summary(vrt, spec["classes"], spec["nodata"])
-            elif dataset == "surface-water":
-                summary = landcover.surface_water_summary(vrt, spec["nodata"])
-            return spec, hrefs, vrt, summary
+            return commands.dataset_prepare(area.bbox, dataset)
 
-        def apply(result):
-            spec, hrefs, vrt, summary = result
-            layer = QgsRasterLayer(vrt, spec["name"], "gdal")
-            if not layer.isValid():
-                raise IOError(f"Could not open the {spec['name']} mosaic")
-            if spec.get("classes"):
-                _paletted_style(layer, spec["classes"])
-            self._add_layer(layer, "esa-worldcover" if dataset == "worldcover" else "planetary-computer",
-                            {"dataset": dataset, "bbox": area.bbox, "tiles": len(hrefs)})
-            self._show_dataset_summary(spec, summary)
-            self.log(f"{spec['name']} added ({len(hrefs)} tile(s))", "success")
+        def apply(prepared):
+            commands.dataset_apply(prepared)
+            self._show_dataset_summary(prepared["spec"], prepared["summary"])
+            self.log(f"{prepared['spec']['name']} added ({prepared['tiles']} tile(s))", "success")
             self._zoom_to_aoi()
 
         self._run(f"Adding {dataset}", work, apply)
@@ -129,34 +113,36 @@ class ToolboxTabsMixin:
         if area is None:
             return
         dataset = self.dataset_combo.currentData()
+        commands = self._commands
 
         def work(task):
-            spec, hrefs = landcover.dataset_hrefs(dataset, area.bbox)
-            digest = hashlib.sha1(json.dumps(area.bbox).encode()).hexdigest()[:8]
-            vrt = os.path.join(cache_dir(), f"{_safe_name(dataset)}_{digest}.vrt")
-            vrt = landcover.build_vrt(vrt, hrefs, area.bbox, spec.get("nodata"),
-                                      materialise=spec["catalogue"] is not None)
-            if spec.get("classes"):
-                return spec, landcover.class_summary(vrt, spec["classes"], spec["nodata"])
-            if dataset == "surface-water":
-                return spec, landcover.surface_water_summary(vrt, spec["nodata"])
-            raise ValueError(f"{spec['name']} has no classes to summarise")
+            return commands.dataset_prepare(area.bbox, dataset)
 
-        def apply(result):
-            spec, summary = result
-            self._show_dataset_summary(spec, summary)
-            self.log(f"{spec['name']} summarised", "success")
+        def apply(prepared):
+            self._show_dataset_summary(prepared["spec"], prepared["summary"])
+            self.log(f"{prepared['spec']['name']} summarised", "success")
 
         self._run(f"Summarising {dataset}", work, apply)
 
     def _show_dataset_summary(self, spec, summary):
-        parts = [f"<h3>{html.escape(spec['name'])}</h3>"]
-        if summary and "classes" in summary:
+        parts = [f"<h3>{html.escape(spec['name'])}</h3>",
+                 f"<p>{html.escape(spec.get('description') or '')}</p>"]
+        kind = (summary or {}).get("kind")
+        if kind == "classes":
             rows = [dict(r, percent=f"{r['fraction'] * 100:.1f}") for r in summary["classes"]]
             parts.append(_table(rows, ["label", "percent", "area_km2"]))
-        elif summary:
+        elif kind == "water":
             parts.append(_table([{"measure": k.replace("_", " "), "value": f"{v * 100:.1f} %"}
-                                 for k, v in summary.items()], ["measure", "value"]))
+                                 for k, v in summary.items() if k != "kind"], ["measure", "value"]))
+        elif summary:
+            unit = spec.get("unit") or ""
+            keep = ("min", "p2", "p25", "median", "mean", "p75", "p98", "max", "valid_fraction",
+                    "area_km2", "above_fraction", "above_area_km2", "note")
+            rows = [{"measure": k.replace("_", " "), "value": summary[k],
+                     "unit": unit if k in ("min", "p2", "p25", "median", "mean", "p75", "p98", "max") else
+                     ("km²" if k.endswith("km2") else "")}
+                    for k in keep if k in summary]
+            parts.append(_table(rows, ["measure", "value", "unit"]))
         parts.append(f"<p><small>{html.escape(spec['attribution'])} ({html.escape(spec['licence'])})</small></p>")
         self.land_view.setHtml("".join(parts))
 
@@ -360,6 +346,10 @@ class ToolboxTabsMixin:
         sensors_button = QPushButton("Air quality sensors")
         sensors_button.clicked.connect(self._fetch_sensors)
         srow.addWidget(sensors_button)
+        openaq_button = QPushButton("OpenAQ monitors")
+        openaq_button.setToolTip("Reference grade monitors; needs a free OpenAQ key from the Sources tab")
+        openaq_button.clicked.connect(self._fetch_openaq)
+        srow.addWidget(openaq_button)
         self.alert_in_aoi = QCheckBox("only in area")
         alerts_button = QPushButton("GDACS disaster alerts")
         alerts_button.clicked.connect(self._fetch_alerts)

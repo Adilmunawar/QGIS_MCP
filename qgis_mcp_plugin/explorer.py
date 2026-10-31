@@ -38,6 +38,7 @@ from qgis.PyQt.QtWidgets import (
 from . import aoi as aoi_mod
 from .connectors import (basemaps, geocode, hazards, indices, osm, registry,
                          stac, weather)
+from .explorer_advanced import AdvancedTabsMixin
 from .explorer_toolbox import ToolboxTabsMixin
 from .live_commands import (
     LiveDataMixin, _memory_layer_from_features, _safe_name, _split_by_geometry,
@@ -112,7 +113,7 @@ class ExplorerTask(QgsTask):
             self._on_error(f"{self.description()}: failed", "")
 
 
-class ExplorerDock(ToolboxTabsMixin, QDockWidget):
+class ExplorerDock(AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
     """The Data Explorer panel."""
 
     closed = pyqtSignal()
@@ -156,6 +157,7 @@ class ExplorerDock(ToolboxTabsMixin, QDockWidget):
         self.tabs.addTab(self._build_osm_tab(), "OpenStreetMap")
         self.tabs.addTab(self._build_hazards_tab(), "Hazards")
         self._build_toolbox_tabs()
+        self._build_advanced_tabs()
         self.tabs.addTab(self._build_basemaps_tab(), "Basemaps")
         self.tabs.addTab(self._build_sources_tab(), "Sources")
         self.tabs.addTab(self._build_log_tab(), "Log")
@@ -338,6 +340,7 @@ class ExplorerDock(ToolboxTabsMixin, QDockWidget):
         fetch = QPushButton("Get weather for the area centre")
         fetch.clicked.connect(self._get_weather)
         layout.addWidget(fetch)
+        layout.addLayout(self._climate_widgets())
         self.weather_view = QTextBrowser()
         self.weather_view.setOpenExternalLinks(True)
         layout.addWidget(self.weather_view, 1)
@@ -381,7 +384,7 @@ class ExplorerDock(ToolboxTabsMixin, QDockWidget):
         self.dem_result = QLabel("")
         self.dem_result.setWordWrap(True)
         layout.addWidget(self.dem_result)
-        layout.addStretch(1)
+        layout.addWidget(self._profile_widgets(), 1)
         return widget
 
     def _build_osm_tab(self):
@@ -456,6 +459,20 @@ class ExplorerDock(ToolboxTabsMixin, QDockWidget):
         fire_button.clicked.connect(self._fetch_fires)
         ff.addRow(fire_button)
         layout.addWidget(fire_box)
+        events_box = QGroupBox("Natural events (NASA EONET)")
+        ef = QFormLayout(events_box)
+        self.event_days = QSpinBox()
+        self.event_days.setRange(1, 365)
+        self.event_days.setValue(30)
+        self.event_days.setSuffix(" days")
+        self.event_in_aoi = QCheckBox("Only inside the area of interest")
+        ef.addRow("Look back", self.event_days)
+        ef.addRow("", self.event_in_aoi)
+        events_button = QPushButton("Fetch natural events")
+        events_button.setToolTip("Storms, wildfires, floods, volcanoes, sea ice, dust and more")
+        events_button.clicked.connect(self._fetch_events)
+        ef.addRow(events_button)
+        layout.addWidget(events_box)
         self.hazard_result = QLabel("")
         self.hazard_result.setWordWrap(True)
         layout.addWidget(self.hazard_result)
@@ -1301,6 +1318,9 @@ class ExplorerDock(ToolboxTabsMixin, QDockWidget):
 
     def cleanup(self):
         self._closed = True
+        timer = getattr(self, '_monitor_timer', None)
+        if timer is not None:
+            timer.stop()
         for task in self._tasks:
             task.cancel()
         self._tasks = []

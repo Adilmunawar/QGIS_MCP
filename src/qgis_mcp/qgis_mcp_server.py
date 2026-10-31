@@ -1221,22 +1221,17 @@ def set_data_source_key(ctx: Context, source_id: str, key: str) -> str:
 # toolbox: land, soil, water, boundaries, species, sensors, alerts
 # ---------------------------------------------------------------------
 @mcp.tool()
-def list_datasets(ctx: Context) -> str:
-    """Global raster datasets the toolbox can add for an area: worldcover (ESA
-    10 m land cover), land-use (Esri annual 10 m), surface-water (JRC water
-    occurrence), nasadem (30 m elevation). All keyless."""
-    return _call("list_datasets")
-
-
-@mcp.tool()
 @with_aoi_doc
 def add_dataset(ctx: Context, aoi: dict, dataset: str = "worldcover",
                 name: Optional[str] = None, summarise: bool = True) -> str:
-    """Add a global dataset clipped to the area, styled, with a class summary.
-    WorldCover takes seconds; land use can take 20 s for several tiles.
-
-    dataset: worldcover, land-use, surface-water or nasadem. The summary gives
-    the share and area of each class (or wet fractions for surface water).
+    """Add one of the global rasters from list_datasets clipped to the area,
+    styled, with a summary: class shares and km² for categorical datasets
+    (worldcover, land-use, cci-land-cover, forest), statistics for continuous
+    ones (nasadem, alos-dem, copernicus-dem-90, height-above-ground,
+    land-surface-temperature, ndvi-modis, leaf-area-index, evapotranspiration,
+    net-primary-productivity, snow-cover, burned-area, biomass,
+    biodiversity-intactness, electrification) and wet fractions for
+    surface-water. WorldCover takes seconds; others 10 to 60 s.
     """
     params: Dict[str, Any] = {"aoi": aoi, "dataset": dataset, "summarise": summarise}
     if name:
@@ -1499,6 +1494,230 @@ def export_area_report(ctx: Context, aoi: dict, path: Optional[str] = None,
     if title:
         params["title"] = title
     return _call("export_area_report", params)
+
+
+# ---------------------------------------------------------------------
+# advanced toolbox: climate, profiles, 3D, events, monitor
+# ---------------------------------------------------------------------
+@mcp.tool()
+def list_datasets(ctx: Context, category: Optional[str] = None) -> str:
+    """List the global rasters add_dataset can clip to an area: land cover
+    (WorldCover, Esri land use, CCI, forest), elevation (NASADEM, ALOS, Copernicus
+    90 m, 3DEP height above ground), MODIS land surface temperature, NDVI, leaf
+    area, evapotranspiration, productivity, snow and burned area, biomass,
+    biodiversity intactness, electrification and surface water. Each entry
+    gives the id, unit, licence and whether it is categorical or continuous.
+    Categories: land cover, elevation, climate, vegetation, water, hazards,
+    biodiversity, settlements.
+    """
+    return _call("list_datasets", {"category": category} if category else {})
+
+
+@mcp.tool()
+@with_aoi_doc
+def get_climate_projection(ctx: Context, aoi: Optional[dict] = None,
+                           lat: Optional[float] = None, lon: Optional[float] = None,
+                           start_year: int = 2030, end_year: int = 2050,
+                           variables: Optional[List[str]] = None,
+                           models: Optional[List[str]] = None) -> str:
+    """Climate projections for a point: yearly means of temperature and rainfall
+    from seven CMIP6 HighResMIP models (1950 to 2050) with an ensemble mean and
+    a first decade versus last decade trend. Up to 30 years per call.
+    """
+    params: Dict[str, Any] = {"start_year": start_year, "end_year": end_year}
+    if aoi:
+        params["aoi"] = aoi
+    if lat is not None and lon is not None:
+        params.update(lat=lat, lon=lon)
+    if variables:
+        params["variables"] = variables
+    if models:
+        params["models"] = models
+    return _call("get_climate_projection", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def get_seasonal_forecast(ctx: Context, aoi: Optional[dict] = None,
+                          lat: Optional[float] = None, lon: Optional[float] = None,
+                          days: int = 90, variables: Optional[List[str]] = None) -> str:
+    """Seasonal outlook up to 274 days ahead: ensemble mean, minimum and maximum
+    per day plus weekly aggregates, for planting, harvest and water planning.
+    """
+    params: Dict[str, Any] = {"days": days}
+    if aoi:
+        params["aoi"] = aoi
+    if lat is not None and lon is not None:
+        params.update(lat=lat, lon=lon)
+    if variables:
+        params["variables"] = variables
+    return _call("get_seasonal_forecast", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def get_elevation_profile(ctx: Context, line: Optional[str] = None, crs: str = "EPSG:4326",
+                          layer_id: Optional[str] = None, selected: bool = True,
+                          points: Optional[List[List[float]]] = None,
+                          aoi: Optional[dict] = None, direction: str = "west-east",
+                          samples: int = 50, add_to_project: bool = False,
+                          name: Optional[str] = None) -> str:
+    """Elevation along a line: pass LINESTRING WKT, a line layer (its selected
+    feature), a list of [lon, lat] points, or an aoi (a west to east or south to
+    north transect through its centre). Returns distance and elevation samples,
+    gain, loss, mean grade and the path of a chart image; optionally adds the
+    sample points as a layer.
+    """
+    params: Dict[str, Any] = {"crs": crs, "selected": selected, "direction": direction,
+                              "samples": samples, "add_to_project": add_to_project}
+    for key, value in (("line", line), ("layer_id", layer_id), ("points", points),
+                       ("aoi", aoi), ("name", name)):
+        if value:
+            params[key] = value
+    return _call("get_elevation_profile", params)
+
+
+@mcp.tool()
+def make_3d_buildings(ctx: Context, layer_id: str, height_field: Optional[str] = None,
+                      levels_field: Optional[str] = None, default_height: float = 10.0,
+                      metres_per_level: float = 3.0, colour: str = "#d9c7a3") -> str:
+    """Give a building footprint layer a 3D renderer that extrudes each polygon
+    by its height tag, or storeys times metres_per_level, or a default. Fields
+    are detected automatically (height, building:levels). Shows in 3D map views
+    and the elevation profile tool.
+    """
+    params: Dict[str, Any] = {"layer_id": layer_id, "default_height": default_height,
+                              "metres_per_level": metres_per_level, "colour": colour}
+    if height_field:
+        params["height_field"] = height_field
+    if levels_field:
+        params["levels_field"] = levels_field
+    return _call("make_3d_buildings", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def add_3d_buildings(ctx: Context, aoi: dict, name: Optional[str] = None,
+                     default_height: float = 10.0, metres_per_level: float = 3.0) -> str:
+    """Fetch OpenStreetMap building footprints for a small area (a town centre,
+    a campus) and extrude them for 3D views. Overpass limits the area to about
+    one degree squared; a few square kilometres works best.
+    """
+    params: Dict[str, Any] = {"aoi": aoi, "default_height": default_height,
+                              "metres_per_level": metres_per_level}
+    if name:
+        params["name"] = name
+    return _call("add_3d_buildings", params)
+
+
+@mcp.tool()
+def set_terrain(ctx: Context, layer_id: str, vertical_scale: float = 1.0,
+                offset: float = 0.0) -> str:
+    """Use a raster DEM layer (from add_dem or add_dataset) as the project's
+    terrain for 3D views and the Elevation Profile panel.
+    """
+    return _call("set_terrain", {"layer_id": layer_id, "vertical_scale": vertical_scale,
+                                 "offset": offset})
+
+
+@mcp.tool()
+@with_aoi_doc
+def add_point_cloud(ctx: Context, aoi: Optional[dict] = None, url: Optional[str] = None,
+                    name: Optional[str] = None, max_tiles: int = 4) -> str:
+    """Add lidar point clouds: USGS 3DEP COPC tiles covering the area (United
+    States) or any https COPC file by url. Layers stream, nothing is downloaded.
+    """
+    params: Dict[str, Any] = {"max_tiles": max_tiles}
+    for key, value in (("aoi", aoi), ("url", url), ("name", name)):
+        if value:
+            params[key] = value
+    return _call("add_point_cloud", params)
+
+
+@mcp.tool()
+def open_3d_view(ctx: Context, name: str = "QGIS MCP 3D",
+                 terrain_layer_id: Optional[str] = None, confirm: bool = False) -> str:
+    """Open a new 3D map view in the QGIS window, optionally setting a DEM layer
+    as terrain first. Refused until confirm=true: creating a 3D canvas from a
+    script has crashed QGIS on remote desktops without a real GPU, so ask the
+    person to save the project first. Fails when QGIS runs headless.
+    """
+    params: Dict[str, Any] = {"name": name, "confirm": confirm}
+    if terrain_layer_id:
+        params["terrain_layer_id"] = terrain_layer_id
+    return _call("open_3d_view", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def fetch_natural_events(ctx: Context, aoi: Optional[dict] = None,
+                         categories: Optional[List[str]] = None, status: str = "open",
+                         days: int = 30, add_to_project: bool = True,
+                         name: Optional[str] = None) -> str:
+    """NASA EONET natural events (severeStorms, wildfires, floods, volcanoes,
+    seaLakeIce, dustHaze, drought, earthquakes, landslides, snow, tempExtremes,
+    waterColor, manmade) with their latest position, magnitude and track length.
+    status is open, closed or all; days up to 365.
+    """
+    params: Dict[str, Any] = {"status": status, "days": days, "add_to_project": add_to_project}
+    for key, value in (("aoi", aoi), ("categories", categories), ("name", name)):
+        if value:
+            params[key] = value
+    return _call("fetch_natural_events", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def fetch_air_quality_stations(ctx: Context, aoi: Optional[dict] = None,
+                               lat: Optional[float] = None, lon: Optional[float] = None,
+                               radius_km: float = 25, name: Optional[str] = None,
+                               limit: int = 100) -> str:
+    """OpenAQ monitoring stations within a radius (25 km maximum) with their
+    latest PM2.5, PM10, NO2, O3 and other readings. Needs a free OpenAQ key
+    stored with set_data_source_key("openaq", key).
+    """
+    params: Dict[str, Any] = {"radius_km": radius_km, "limit": limit}
+    if aoi:
+        params["aoi"] = aoi
+    if lat is not None and lon is not None:
+        params.update(lat=lat, lon=lon)
+    if name:
+        params["name"] = name
+    return _call("fetch_air_quality_stations", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def start_live_monitor(ctx: Context, aoi: dict, sources: Optional[List[str]] = None,
+                       interval_minutes: int = 10, rules: Optional[dict] = None,
+                       run_now: bool = True) -> str:
+    """Watch an area: refresh earthquakes, air sensors, weather, GDACS alerts and
+    NASA events on a timer, keep them as monitor_* layers, and raise alerts in
+    the QGIS message bar when thresholds are crossed. rules override defaults,
+    e.g. {"earthquakes": {"min_magnitude": 5}, "weather": {"temperature_2m": 38},
+    "air_sensors": {"pm2_5": 35}, "disaster_alerts": {"levels": ["red"]}}.
+    sources default to all five. One monitor runs at a time.
+    """
+    params: Dict[str, Any] = {"aoi": aoi, "interval_minutes": interval_minutes, "run_now": run_now}
+    if sources:
+        params["sources"] = sources
+    if rules:
+        params["rules"] = rules
+    return _call("start_live_monitor", params)
+
+
+@mcp.tool()
+def stop_live_monitor(ctx: Context) -> str:
+    """Stop the live monitor timer; monitor_* layers stay in the project."""
+    return _call("stop_live_monitor")
+
+
+@mcp.tool()
+def get_live_monitor_status(ctx: Context, limit: int = 50) -> str:
+    """Whether the live monitor runs, its configuration, feature counts per
+    source, feed errors and the most recent alerts.
+    """
+    return _call("get_live_monitor_status", {"limit": limit})
 
 
 # ---------------------------------------------------------------------

@@ -58,64 +58,138 @@ def _diverging_style(layer, lo, hi):
     layer.triggerRepaint()
 
 
+def _ramp_style(layer, lo, hi, colours, unit=None):
+    """Single band pseudocolour between lo and hi over a list of hex colours."""
+    from qgis.core import (QgsColorRampShader, QgsRasterShader,
+                           QgsSingleBandPseudoColorRenderer)
+    from qgis.PyQt.QtGui import QColor
+    if hi <= lo:
+        hi = lo + 1.0
+    n = len(colours)
+    items = [QgsColorRampShader.ColorRampItem(lo + (hi - lo) * i / (n - 1), QColor(c),
+                                              f"{lo + (hi - lo) * i / (n - 1):.3g}"
+                                              + (f" {unit}" if unit and i == n - 1 else ""))
+             for i, c in enumerate(colours)]
+    shader = QgsRasterShader()
+    ramp = QgsColorRampShader(lo, hi)
+    ramp.setColorRampType(QgsColorRampShader.Type.Interpolated)
+    ramp.setColorRampItemList(items)
+    shader.setRasterShaderFunction(ramp)
+    renderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1, shader)
+    renderer.setClassificationMin(lo)
+    renderer.setClassificationMax(hi)
+    layer.setRenderer(renderer)
+    layer.triggerRepaint()
+
+
+def report_to_pdf(html_path, pdf_path):
+    """Render a report's HTML to an A4 PDF with Qt (GUI thread only)."""
+    from qgis.PyQt.QtCore import QUrl
+    from qgis.PyQt.QtGui import QPageSize, QTextDocument
+    from qgis.PyQt.QtPrintSupport import QPrinter
+    with open(html_path, encoding="utf-8") as handle:
+        text = handle.read().replace("width='900'", "width='640'")
+    doc = QTextDocument()
+    doc.setBaseUrl(QUrl.fromLocalFile(html_path))
+    doc.setHtml(text)
+    printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+    printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+    printer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+    printer.setOutputFileName(pdf_path)
+    printing = getattr(doc, "print", None) or getattr(doc, "print_")
+    printing(printer)
+    if not os.path.exists(pdf_path):
+        raise IOError(f"Qt did not write {pdf_path}")
+    return pdf_path
+
+
 class ToolboxMixin:
     """Land, soil, water, boundaries, species, sensors, alerts and analysis."""
 
     # ------------------------------------------------------------------
     # datasets: land cover, land use, surface water, NASADEM
     # ------------------------------------------------------------------
-    def list_datasets(self):
-        return {"datasets": [dict(id=k, **{kk: vv for kk, vv in v.items()
-                                           if kk != "classes"},
-                                  classes=list((v.get("classes") or {}).values()) and
-                                  [label for label, _ in v["classes"].values()])
-                             for k, v in landcover.DATASETS.items()]}
+    def list_datasets(self, category=None):
+        rows = []
+        for key, spec in landcover.DATASETS.items():
+            if category and spec.get("category") != category:
+                continue
+            row = {k: v for k, v in spec.items() if k not in ("classes", "ramp")}
+            row["id"] = key
+            row["kind"] = "categorical" if spec.get("classes") else "continuous"
+            row["classes"] = [label for label, _ in (spec.get("classes") or {}).values()]
+            if row.get("valid_range") is not None:
+                row["valid_range"] = list(row["valid_range"])
+            rows.append(row)
+        return {"count": len(rows), "categories": sorted({r["category"] for r in rows}),
+                "datasets": rows}
 
-    def add_dataset(self, aoi, dataset="worldcover", name=None, summarise=True):
-        """Add a named global dataset clipped to the area, with a class summary."""
-        area = self._resolve_aoi(aoi)
-        spec, hrefs = landcover.dataset_hrefs(dataset, area.bbox)
-        digest = hashlib.sha1(json.dumps(area.bbox).encode()).hexdigest()[:8]
-        vrt = os.path.join(cache_dir(), f"{_safe_name(dataset)}_{digest}.vrt")
+    def dataset_prepare(self, bbox, dataset="worldcover"):
+        """Worker half: resolve tiles, mosaic, convert units and summarise."""
+        spec, hrefs = landcover.dataset_hrefs(dataset, bbox)
+        # The name follows the source files (without their signatures), so a
+        # newer MODIS period gets a new file instead of rewriting one that an
+        # open layer may still be reading.
+        stable = sorted(h.split("?")[0] for h in hrefs)
+        digest = hashlib.sha1(json.dumps([bbox, stable]).encode()).hexdigest()[:8]
+        path = os.path.join(cache_dir(), f"{_safe_name(dataset)}_{digest}.vrt")
         # Planetary Computer URLs are signed and expire, so those are copied
         # into a local GeoTIFF; WorldCover on AWS is stable and stays streamed.
-        vrt = landcover.build_vrt(vrt, hrefs, area.bbox, spec.get("nodata"),
-                                  materialise=spec["catalogue"] is not None)
-        layer = QgsRasterLayer(vrt, name or spec["name"], "gdal")
+        path = landcover.build_vrt(path, hrefs, bbox, spec.get("nodata"),
+                                   materialise=spec["catalogue"] is not None, spec=spec)
+        summary = landcover.summarise(path, spec)
+        return {"dataset": dataset, "spec": spec, "tiles": len(hrefs), "path": path,
+                "bbox": list(bbox), "summary": summary}
+
+    def dataset_apply(self, prepared, name=None):
+        """GUI half: load the mosaic, style it and record provenance."""
+        spec, path, dataset = prepared["spec"], prepared["path"], prepared["dataset"]
+        layer = QgsRasterLayer(path, name or spec["name"], "gdal")
         if not layer.isValid():
             raise IOError(f"Could not open the {spec['name']} mosaic")
+        summary = prepared.get("summary") or {}
         if spec.get("classes"):
             _paletted_style(layer, spec["classes"])
+        elif spec.get("ramp"):
+            lo, hi = summary.get("p2"), summary.get("p98")
+            if lo is None or hi is None or lo == hi:
+                lo, hi = (spec.get("valid_range") or (0, 1))
+            _ramp_style(layer, float(lo), float(hi), spec["ramp"], spec.get("unit"))
         source_id = "esa-worldcover" if dataset == "worldcover" else "planetary-computer"
-        layer = self._add_layer(layer, source_id, {"dataset": dataset, "bbox": area.bbox,
-                                                   "tiles": len(hrefs)})
+        layer = self._add_layer(layer, source_id, {"dataset": dataset, "bbox": prepared["bbox"],
+                                                   "tiles": prepared["tiles"]})
         meta = layer.metadata()
         meta.setRights([spec["licence"]])
         layer.setMetadata(meta)
-        response = {"layer_id": layer.id(), "name": layer.name(), "dataset": dataset,
-                    "tiles": len(hrefs), "path": vrt, "aoi": area.to_dict(),
-                    "licence": spec["licence"], "attribution": spec["attribution"]}
-        if summarise and spec.get("classes"):
-            response["summary"] = landcover.class_summary(vrt, spec["classes"], spec["nodata"])
-        elif summarise and dataset == "surface-water":
-            response["summary"] = landcover.surface_water_summary(vrt, spec["nodata"])
         if self.iface is not None:
             self.iface.mapCanvas().refresh()
+        return layer
+
+    def add_dataset(self, aoi, dataset="worldcover", name=None, summarise=True):
+        """Add a named global dataset clipped to the area, with a summary."""
+        area = self._resolve_aoi(aoi)
+        prepared = self.dataset_prepare(area.bbox, dataset)
+        layer = self.dataset_apply(prepared, name)
+        spec = prepared["spec"]
+        response = {"layer_id": layer.id(), "name": layer.name(), "dataset": dataset,
+                    "kind": "categorical" if spec.get("classes") else "continuous",
+                    "unit": spec.get("unit"), "tiles": prepared["tiles"],
+                    "path": prepared["path"], "aoi": area.to_dict(),
+                    "licence": spec["licence"], "attribution": spec["attribution"],
+                    "description": spec["description"]}
+        if summarise:
+            response["summary"] = prepared["summary"]
         return response
 
     def summarise_land_cover(self, aoi, dataset="worldcover"):
-        """Share of the area per land cover class, without adding a layer."""
+        """Statistics or class shares for a dataset over the area, no layer added."""
         area = self._resolve_aoi(aoi)
-        spec, hrefs = landcover.dataset_hrefs(dataset, area.bbox)
-        if not spec.get("classes"):
-            raise ValueError(f"{dataset} has no classes to summarise")
-        digest = hashlib.sha1(json.dumps(area.bbox).encode()).hexdigest()[:8]
-        vrt = os.path.join(cache_dir(), f"{_safe_name(dataset)}_{digest}.vrt")
-        vrt = landcover.build_vrt(vrt, hrefs, area.bbox, spec.get("nodata"),
-                                  materialise=spec["catalogue"] is not None)
-        summary = landcover.class_summary(vrt, spec["classes"], spec["nodata"])
-        summary.update({"dataset": dataset, "name": spec["name"], "aoi": area.to_dict(),
-                        "attribution": spec["attribution"]})
+        prepared = self.dataset_prepare(area.bbox, dataset)
+        summary = dict(prepared["summary"])
+        spec = prepared["spec"]
+        summary.update({"dataset": dataset, "name": spec["name"], "unit": spec.get("unit"),
+                        "aoi": area.to_dict(), "attribution": spec["attribution"],
+                        "description": spec["description"]})
         return summary
 
     # ------------------------------------------------------------------
@@ -578,14 +652,20 @@ class ToolboxMixin:
             except Exception as exc:
                 errors["map"] = str(exc)[:200]
                 image_path = None
-        if path and os.path.splitext(str(path))[1].lower() not in (".html", ".htm"):
-            raise ValueError("path must end in .html")
+        ext = os.path.splitext(str(path))[1].lower() if path else ".html"
+        if ext not in (".html", ".htm", ".pdf"):
+            raise ValueError("path must end in .html or .pdf")
         path = path or os.path.join(cache_dir(), f"area_report_{_safe_name(area.label or 'aoi')[:30]}.html")
-        with open(path, "w", encoding="utf-8") as handle:
+        html_path = path[:-4] + ".html" if ext == ".pdf" else path
+        with open(html_path, "w", encoding="utf-8") as handle:
             handle.write(_report_html(title or (area.label or "Area report"), area,
                                       sections, errors, image_path))
-        return {"path": path, "sections": [s for s, _ in sections], "errors": errors,
-                "elapsed_s": round(time.monotonic() - started, 1), "aoi": area.to_dict()}
+        response = {"path": path, "html_path": html_path, "sections": [s for s, _ in sections],
+                    "errors": errors, "elapsed_s": round(time.monotonic() - started, 1),
+                    "aoi": area.to_dict()}
+        if ext == ".pdf":
+            report_to_pdf(html_path, path)
+        return response
 
 
 def _fmt(value, digits=3):

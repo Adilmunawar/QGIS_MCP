@@ -16,6 +16,8 @@ FLOOD = "https://flood-api.open-meteo.com/v1/flood"
 MARINE = "https://marine-api.open-meteo.com/v1/marine"
 ELEVATION = "https://api.open-meteo.com/v1/elevation"
 POWER_DAILY = "https://power.larc.nasa.gov/api/temporal/daily/point"
+CLIMATE = "https://climate-api.open-meteo.com/v1/climate"
+SEASONAL = "https://seasonal-api.open-meteo.com/v1/seasonal"
 
 CURRENT_DEFAULT = ["temperature_2m", "relative_humidity_2m", "precipitation",
                    "wind_speed_10m", "wind_direction_10m", "weather_code",
@@ -29,6 +31,13 @@ AIR_DEFAULT = ["pm10", "pm2_5", "carbon_monoxide", "nitrogen_dioxide",
                "ozone", "us_aqi", "dust"]
 POWER_DEFAULT = ["T2M", "T2M_MAX", "T2M_MIN", "PRECTOTCORR", "RH2M", "WS2M",
                  "ALLSKY_SFC_SW_DWN"]
+CLIMATE_MODELS = ["CMCC_CM2_VHR4", "FGOALS_f3_H", "HiRAM_SIT_HR",
+                  "MRI_AGCM3_2_S", "EC_Earth3P_HR", "MPI_ESM1_2_XR",
+                  "NICAM16_8S"]
+CLIMATE_DEFAULT = ["temperature_2m_mean", "temperature_2m_max",
+                   "precipitation_sum"]
+SEASONAL_DEFAULT = ["temperature_2m_max", "temperature_2m_min",
+                    "precipitation_sum"]
 MAX_POINTS = 100
 
 WMO_CODES = {
@@ -243,3 +252,149 @@ def _check_dates(start, end):
         raise ValueError("start_date must not be after end_date")
     if (e - s).days > 366 * 5:
         raise ValueError("Limit requests to five years at a time")
+
+
+def climate_projection(points, start_year, end_year, variables=None,
+                       models=None):
+    """CMIP6 HighResMIP projections (1950 to 2050), aggregated per year.
+
+    One request per point. Per model yearly values are averaged (or summed
+    for ``*_sum`` variables), then averaged across models. Models with no
+    data for a year (missing or all zero days) are left out of the ensemble.
+    """
+    try:
+        start_year, end_year = int(start_year), int(end_year)
+    except (TypeError, ValueError):
+        raise ValueError("start_year and end_year must be integers")
+    start_year, end_year = max(1950, start_year), min(2050, end_year)
+    if start_year > end_year:
+        raise ValueError("start_year must not be after end_year (range 1950 to 2050)")
+    if end_year - start_year + 1 > 30:
+        raise ValueError("Request at most 30 years per call")
+    models = list(models or CLIMATE_MODELS)
+    bad = [m for m in models if m not in CLIMATE_MODELS]
+    if bad:
+        raise ValueError(f"Unknown climate models {bad}; use {CLIMATE_MODELS}")
+    variables = list(variables or CLIMATE_DEFAULT)
+    rows = []
+    for lon, lat in points[:MAX_POINTS]:
+        data = net.get_json(CLIMATE, {
+            "latitude": f"{float(lat):.5f}", "longitude": f"{float(lon):.5f}",
+            "start_date": f"{start_year}-01-01", "end_date": f"{end_year}-12-31",
+            "models": models, "daily": variables,
+        }, timeout_ms=120_000)
+        rows.append(_aggregate_climate(lon, lat, start_year, end_year,
+                                       models, variables, data))
+    return rows
+
+
+def _aggregate_climate(lon, lat, start_year, end_year, models, variables, data):
+    daily = data.get("daily") or {}
+    years = [int(t[:4]) for t in daily.get("time") or []]
+    yearly = {y: {"year": y} for y in sorted(set(years))}
+    units = {}
+    # A model with no data for a year reports zeros for every variable at
+    # once; a dry year legitimately sums to zero rainfall but not zero heat.
+    dead = set()
+    for model in models:
+        zero_by_year = {}
+        for var in variables:
+            series = daily.get(f"{var}_{model}")
+            if series is None and len(models) == 1:
+                series = daily.get(var)
+            for y, v in zip(years, series or []):
+                zero_by_year.setdefault(y, True)
+                if v not in (None, 0.0):
+                    zero_by_year[y] = False
+        dead.update((model, y) for y, is_zero in zero_by_year.items() if is_zero)
+    for var in variables:
+        is_sum = var.endswith("_sum")
+        units[var] = next((u for k, u in (data.get("daily_units") or {}).items()
+                           if k == var or k.startswith(var + "_")), None)
+        per_year = {}
+        for model in models:
+            buckets = {}
+            series = daily.get(f"{var}_{model}")
+            if series is None and len(models) == 1:
+                series = daily.get(var)  # one model: the API drops the suffix
+            for y, v in zip(years, series or []):
+                buckets.setdefault(y, []).append(v)
+            for y, vals in buckets.items():
+                real = [v for v in vals if v is not None]
+                if not real or (model, y) in dead:
+                    continue
+                value = sum(real) if is_sum else sum(real) / len(real)
+                per_year.setdefault(y, {})[model] = round(value, 2)
+        for y, by_model in per_year.items():
+            yearly[y][var] = round(sum(by_model.values()) / len(by_model), 2)
+            yearly[y][var + "_by_model"] = by_model
+    ordered = [yearly[y] for y in sorted(yearly)]
+    return {"lon": lon, "lat": lat, "start_year": start_year,
+            "end_year": end_year, "models": models, "variables": variables,
+            "units": units, "yearly": ordered,
+            "trend": _climate_trend(ordered, variables)}
+
+
+def _climate_trend(yearly, variables):
+    trend = {}
+    for var in variables:
+        values = [r[var] for r in yearly if r.get(var) is not None]
+        if len(values) < 2:
+            continue
+        span = min(10, max(1, len(values) // 2))
+        first = sum(values[:span]) / span
+        last = sum(values[-span:]) / span
+        trend[var] = {"first_decade_mean": round(first, 2),
+                      "last_decade_mean": round(last, 2),
+                      "change": round(last - first, 2)}
+    return trend
+
+
+def seasonal_forecast(points, days=90, variables=None):
+    """Seasonal ensemble forecast (up to 274 days) with member spread.
+
+    Daily rows carry the ensemble mean plus the min and max across members.
+    Weekly rows average temperature like variables and sum ``*_sum`` ones.
+    """
+    days = max(7, min(int(days), 274))
+    variables = list(variables or SEASONAL_DEFAULT)
+    rows = []
+    for lon, lat in points[:MAX_POINTS]:
+        data = net.get_json(SEASONAL, {
+            "latitude": f"{float(lat):.5f}", "longitude": f"{float(lon):.5f}",
+            "daily": variables, "forecast_days": days,
+        }, timeout_ms=120_000)
+        block = data.get("daily") or {}
+        daily = []
+        for i, t in enumerate(block.get("time") or []):
+            row = {"time": t}
+            for var in variables:
+                members = [block[k][i] for k in block
+                           if k.startswith(var + "_member")
+                           and i < len(block[k]) and block[k][i] is not None]
+                mean = block.get(var) or []
+                row[var] = mean[i] if i < len(mean) else None
+                row[var + "_min"] = min(members) if members else None
+                row[var + "_max"] = max(members) if members else None
+            daily.append(row)
+        units = {v: (data.get("daily_units") or {}).get(v) for v in variables}
+        rows.append({"lon": lon, "lat": lat, "units": units, "days": days,
+                     "daily": daily, "weekly": _weekly(daily, variables)})
+    return rows
+
+
+def _weekly(daily, variables):
+    weeks = []
+    for start in range(0, len(daily), 7):
+        chunk = daily[start:start + 7]
+        row = {"week_start": chunk[0]["time"], "days": len(chunk)}
+        for var in variables:
+            vals = [r[var] for r in chunk if r.get(var) is not None]
+            if not vals:
+                row[var] = None
+            elif var.endswith("_sum"):
+                row[var] = round(sum(vals), 2)
+            else:
+                row[var] = round(sum(vals) / len(vals), 2)
+        weeks.append(row)
+    return weeks

@@ -16,6 +16,8 @@ BASEMAPS = "basemaps"
 SENSORS = "sensors"
 LAND = "land"
 BIODIVERSITY = "biodiversity"
+THREE_D = "3d"
+CLIMATE = "climate"
 
 CATEGORIES = {
     IMAGERY: "Satellite imagery and derived spectral indices",
@@ -27,6 +29,8 @@ CATEGORIES = {
     SENSORS: "Real time sensor and observation networks",
     LAND: "Land cover, land use and soil",
     BIODIVERSITY: "Species observations and ecology",
+    THREE_D: "3D: terrain, buildings and lidar point clouds",
+    CLIMATE: "Climate projections and seasonal outlooks",
 }
 
 REGISTRY = {}
@@ -84,9 +88,11 @@ source("earth-search", "Element84 Earth Search (AWS Open Data)", IMAGERY,
 source("planetary-computer", "Microsoft Planetary Computer", IMAGERY,
        licence="Varies per collection",
        auth="none",
-       description="STAC catalogue with signed asset URLs: Esri land use, JRC "
-                   "surface water, NASADEM, and a fallback for imagery.",
-       commands=["search_imagery", "add_dataset"],
+       description="STAC catalogue with signed asset URLs: Esri land use, CCI land "
+                   "cover, JRC surface water, NASADEM, ALOS DEM, MODIS temperature, "
+                   "NDVI, snow, burned area, evapotranspiration, biomass, "
+                   "biodiversity, electrification and 3DEP lidar.",
+       commands=["search_imagery", "add_dataset", "summarise_land_cover", "add_point_cloud"],
        docs="https://planetarycomputer.microsoft.com/api/stac/v1")
 
 source("nasa-gibs", "NASA GIBS daily imagery", BASEMAPS,
@@ -201,6 +207,54 @@ source("gdacs", "GDACS disaster alerts", HAZARDS,
        commands=["fetch_disaster_alerts"],
        docs="https://www.gdacs.org/",
        attribution="GDACS (EC JRC / UN OCHA)")
+
+source("nasa-modis", "NASA MODIS land products (via Planetary Computer)", LAND,
+       licence="Public domain (NASA LP DAAC, NSIDC)",
+       description="Land surface temperature, NDVI, leaf area, evapotranspiration, "
+                   "productivity, snow cover and burned area, 250 m to 1 km, latest period.",
+       commands=["add_dataset", "summarise_land_cover", "list_datasets"],
+       docs="https://lpdaac.usgs.gov/", attribution="NASA MODIS (LP DAAC / NSIDC)")
+
+source("usgs-3dep", "USGS 3DEP lidar (COPC point clouds, height above ground)", THREE_D,
+       licence="Public domain (USGS)",
+       description="Lidar point clouds streamed as COPC and 2 m height above ground, United States.",
+       commands=["add_point_cloud", "add_dataset"],
+       docs="https://www.usgs.gov/3d-elevation-program", attribution="USGS 3D Elevation Program")
+
+source("openstreetmap-3d", "OpenStreetMap building footprints, extruded", THREE_D,
+       licence="ODbL",
+       description="Buildings from Overpass extruded by height or storey tags for 3D views.",
+       commands=["add_3d_buildings", "make_3d_buildings", "open_3d_view", "set_terrain"],
+       attribution="© OpenStreetMap contributors")
+
+source("open-meteo-climate", "Open-Meteo climate projections (CMIP6 HighResMIP)", CLIMATE,
+       licence="CC BY 4.0",
+       description="Seven downscaled climate models, daily 1950 to 2050, for any point.",
+       commands=["get_climate_projection"],
+       docs="https://open-meteo.com/en/docs/climate-api")
+
+source("open-meteo-seasonal", "Open-Meteo seasonal forecast", CLIMATE,
+       licence="CC BY 4.0",
+       description="Ensemble outlook up to nine months ahead with member spread.",
+       commands=["get_seasonal_forecast"],
+       docs="https://open-meteo.com/en/docs/seasonal-forecast-api")
+
+source("nasa-eonet", "NASA EONET natural events", HAZARDS,
+       licence="Public domain (NASA)",
+       description="Curated natural events (storms, wildfires, floods, volcanoes, ice, dust) with tracks.",
+       commands=["fetch_natural_events", "start_live_monitor"],
+       docs="https://eonet.gsfc.nasa.gov/docs/v3")
+
+source("openaq", "OpenAQ air quality monitors", SENSORS,
+       licence="CC BY 4.0", auth="free key", key_setting="qgis_mcp/keys/openaq",
+       description="Reference grade and low cost monitors worldwide with latest readings.",
+       commands=["fetch_air_quality_stations"],
+       docs="https://docs.openaq.org/")
+
+source("live-monitor", "Live monitor (earthquakes, sensors, weather, alerts, events)", HAZARDS,
+       licence="Per underlying source",
+       description="Timer driven refresh of the feeds above for an area, with threshold alerts.",
+       commands=["start_live_monitor", "stop_live_monitor", "get_live_monitor_status"])
 
 source("copernicus-dem", "Copernicus DEM GLO-30", ELEVATION,
        licence="Copernicus DEM licence (free, attribution)",

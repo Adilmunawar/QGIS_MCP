@@ -213,7 +213,7 @@ def run(cmd, **p):
 
 
 r = run("list_datasets")
-check("cmd: list_datasets", r["status"] == "success" and len(r["result"]["datasets"]) == 4)
+check("cmd: list_datasets", r["status"] == "success" and len(r["result"]["datasets"]) == 19)
 r = run("get_soil_properties", lat=30.2, lon=71.47)
 check("cmd: soil", r["status"] == "success" and r["result"]["texture_class"] == "loam")
 r = run("add_admin_boundaries", iso3="PAK", level="ADM2", aoi={"bbox": [71.4, 30.1, 71.6, 30.3]})

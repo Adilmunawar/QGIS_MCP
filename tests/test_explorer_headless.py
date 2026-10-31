@@ -53,7 +53,28 @@ USGS = {"metadata": {}, "features": [
      "properties": {"mag": 5.1, "place": "near Multan", "time": 1}}]}
 
 
+CLIM = {"daily_units": {"time": "iso8601", "temperature_2m_mean_CMCC_CM2_VHR4": "°C", "precipitation_sum_CMCC_CM2_VHR4": "mm"},
+        "daily": {"time": [f"2040-01-{d:02d}" for d in range(1, 6)] + [f"2041-01-{d:02d}" for d in range(1, 6)],
+                  "temperature_2m_mean_CMCC_CM2_VHR4": [14.0] * 5 + [16.0] * 5,
+                  "precipitation_sum_CMCC_CM2_VHR4": [1.0] * 10}}
+EONET = {"events": [{"id": "EONET_1", "title": "Wildfire test", "link": "x", "closed": None,
+                     "categories": [{"id": "wildfires", "title": "Wildfires"}], "sources": [{"id": "IRWIN"}],
+                     "geometry": [{"magnitudeValue": 10.0, "magnitudeUnit": "acres", "date": "2026-10-28T18:02:00Z",
+                                   "type": "Point", "coordinates": [71.5, 30.2]}]}]}
+
+
 def fake_fetch(url, params=None, headers=None, method="GET", body=None, timeout_ms=0):
+    if "/v1/elevation" in url:
+        n = len((params or {}).get("latitude", "").split(","))
+        return 200, json.dumps({"elevation": [120.0 + (i % 7) for i in range(n)]}).encode()
+    if "climate-api" in url:
+        return 200, json.dumps(CLIM).encode()
+    if "eonet" in url:
+        return 200, json.dumps(EONET).encode()
+    if "sensor.community" in url:
+        return 200, b"[]"
+    if "gdacs" in url:
+        return 200, b'<?xml version="1.0"?><rss><channel></channel></rss>'
     if "nominatim" in url:
         return 200, json.dumps(NOMINATIM).encode()
     if url.endswith("/search"):
@@ -89,7 +110,7 @@ dock.resize(560, 940)
 app.setFont(__import__("qgis.PyQt.QtGui", fromlist=["QFont"]).QFont("Segoe UI", 9))
 dock.show()
 app.processEvents()
-check("dock builds with 12 tabs", dock.tabs.count() == 12, dock.tabs.count())
+check("dock builds with 14 tabs", dock.tabs.count() == 14, dock.tabs.count())
 check("sources table populated", dock.sources_table.rowCount() >= 10)
 check("basemap list populated", dock.basemap_list.count() >= 15)
 check("osm presets populated", dock.osm_preset.count() == len(OSM_PRESETS))
@@ -189,6 +210,61 @@ def stubbed_scenario():
     dock.key_edit.setText("abcdefghijklmnop")
     dock._save_key()
     check("key saved and source ready", dock.sources_table.item(rows[0], 2).text() == "yes")
+
+    # Climate projection on the Weather tab -----------------------------------------------
+    dock.climate_from.setValue(2040)
+    dock.climate_to.setValue(2041)
+    dock._climate()
+    check("climate finished", pump(60))
+    check("climate rendered", "2041" in dock.weather_view.toPlainText() and "16.0" in dock.weather_view.toPlainText(),
+          dock.weather_view.toPlainText()[:300])
+    dock.climate_to.setValue(2039)
+    dock._climate()
+    check("climate refuses reversed years", "end year" in dock.log_view.toPlainText())
+
+    # Elevation profile across the area ------------------------------------------------------
+    dock._profile(from_layer=False)
+    check("profile finished", pump(60))
+    check("profile rendered with chart", "gain m" in dock.profile_view.toPlainText()
+          and "<img" in dock.profile_view.toHtml(), dock.profile_view.toPlainText()[:200])
+    dock._profile(from_layer=True)
+    check("profile from layer needs a line layer", "Pick a line layer" in dock.log_view.toPlainText())
+
+    # 3D tab: extrude a footprint layer and refuse a point layer ----------------------------
+    from qgis.core import QgsVectorLayer as _VL
+    bld = _VL("Polygon?crs=EPSG:4326&field=building:levels:string", "bld", "memory")
+    bf = QgsFeature(bld.fields())
+    bf.setGeometry(QgsGeometry.fromWkt("POLYGON((71.5 30.2,71.501 30.2,71.501 30.201,71.5 30.201,71.5 30.2))"))
+    bf.setAttributes(["4"])
+    bld.dataProvider().addFeatures([bf])
+    QgsProject.instance().addMapLayer(bld)
+    app.processEvents()
+    dock.building_layer_combo.setLayer(bld)
+    dock._extrude_layer()
+    check("3d: polygon layer extruded", bld.renderer3D() is not None and "extruded" in dock.view3d_result.text(),
+          dock.view3d_result.text())
+    dock.terrain_layer_combo.setCurrentIndex(-1)
+    dock._set_terrain()
+    check("3d: terrain without raster logs an error", "Pick a DEM" in dock.log_view.toPlainText())
+    dock._open_3d()
+    check("3d: view needs the window", "headless" in dock.log_view.toPlainText())
+    dock._add_copc()
+    check("3d: empty COPC url refused", "Paste a COPC URL" in dock.log_view.toPlainText())
+
+    # Monitor tab -------------------------------------------------------------------------------
+    dock.monitor_temp.setValue(20)
+    dock._monitor_start()
+    check("monitor first refresh finished", pump(60))
+    check("monitor alert rows", dock.monitor_table.rowCount() >= 2
+          and any("earthquake" in dock.monitor_table.item(r, 3).text() for r in range(dock.monitor_table.rowCount())),
+          [dock.monitor_table.item(r, 3).text() for r in range(dock.monitor_table.rowCount())])
+    check("monitor layers created", any(l.name().startswith("monitor_") for l in QgsProject.instance().mapLayers().values()))
+    check("monitor timer running", dock._monitor_timer.isActive() and not dock.monitor_start.isEnabled())
+    dock._monitor_tick()
+    check("monitor second refresh finished", pump(60))
+    check("monitor status updated", "Run 2" in dock.monitor_status.text(), dock.monitor_status.text())
+    dock._monitor_stop()
+    check("monitor stopped", not dock._monitor_timer.isActive() and dock.monitor_start.isEnabled())
 
     # Screenshots -----------------------------------------------------------------------
     os.makedirs(SHOTS, exist_ok=True)
