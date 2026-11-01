@@ -46,6 +46,7 @@ from .live_commands import LiveDataMixin
 from .toolbox_commands import ToolboxMixin
 from .advanced_commands import AdvancedMixin
 from .sensor_commands import SensorsMixin
+from .field_commands import FieldsMixin
 
 _EXPORT_SUCCESS = getattr(
     getattr(QgsLayoutExporter, "ExportResult", QgsLayoutExporter), "Success", 0
@@ -63,7 +64,7 @@ GEOMETRY_KEYWORDS = {
 }
 
 
-class QgisMCPServer(SensorsMixin, AdvancedMixin, ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
+class QgisMCPServer(FieldsMixin, SensorsMixin, AdvancedMixin, ToolboxMixin, LiveDataMixin, DataCommandsMixin, ServerCore):
     """The full command surface, mounted on the gated transport."""
 
     def _handlers(self):
@@ -202,6 +203,9 @@ class QgisMCPServer(SensorsMixin, AdvancedMixin, ToolboxMixin, LiveDataMixin, Da
             "add_sensorthings_layer": self.add_sensorthings_layer,
             "estimate_population": self.estimate_population,
             "add_3d_tiles": self.add_3d_tiles,
+            "analyse_fields": self.analyse_fields,
+            "field_time_series": self.field_time_series,
+            "export_field_report": self.export_field_report,
         }
 
     # ------------------------------------------------------------------

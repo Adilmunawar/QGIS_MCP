@@ -141,6 +141,10 @@ COMMAND_HELP = {
     "add_sensorthings_layer": "A SensorThings entity set as a live layer.",
     "estimate_population": "People in the area from WorldPop and Meta, with age pyramid.",
     "add_3d_tiles": "Cesium 3D Tiles scene: Google Photorealistic (key) or any URL.",
+    # field analytics
+    "analyse_fields": "Per field vigour, change and status as a new styled layer.",
+    "field_time_series": "Index history of one field with a chart.",
+    "export_field_report": "Analyse fields and write an HTML or PDF report.",
 }
 
 

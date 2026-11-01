@@ -55,7 +55,8 @@ def chart(series, title="", unit="", kind="line", width=720, height=240, path=No
     painter.setPen(QPen(AXIS, 1))
     painter.setFont(QFont("Segoe UI", 8))
     if title:
-        painter.drawText(QRectF(left, 2, plot_w, 18), Qt.AlignmentFlag.AlignLeft, title)
+        painter.drawText(QRectF(left, 2, plot_w, 18), Qt.AlignmentFlag.AlignLeft,
+                         f"{title} ({unit})" if unit else title)
     painter.drawLine(left, top, left, height - bottom)
     painter.drawLine(left, height - bottom, width - right, height - bottom)
     for frac in (0.0, 0.5, 1.0):
@@ -65,16 +66,15 @@ def chart(series, title="", unit="", kind="line", width=720, height=240, path=No
         painter.drawLine(left, int(y), width - right, int(y))
         painter.setPen(QPen(AXIS, 1))
         painter.drawText(QRectF(0, y - 8, left - 6, 16), Qt.AlignmentFlag.AlignRight, f"{value:.3g}")
-    if unit:
-        painter.drawText(QRectF(0, top - 22, left - 6, 16), Qt.AlignmentFlag.AlignRight, unit)
     for i in sorted({0, len(points) // 2, len(points) - 1}):
-        painter.drawText(QRectF(left + plot_w * i / span_x - 50, height - bottom + 4, 100, 18),
-                         Qt.AlignmentFlag.AlignHCenter, points[i][0][:10])
+        x = min(max(left + plot_w * i / span_x, left + 50), width - right - 50)
+        painter.drawText(QRectF(x - 50, height - bottom + 4, 100, 18),
+                         Qt.AlignmentFlag.AlignHCenter, points[i][0][:12])
     if kind == "bar":
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(colour or BAR))
         base_y = xy(0, 0.0).y()
-        bar_w = max(2.0, plot_w / len(points) * 0.7)
+        bar_w = max(2.0, min(90.0, plot_w / len(points) * 0.7))
         for i, (_, v) in enumerate(points):
             p = xy(i, v)
             painter.drawRect(QRectF(p.x() - bar_w / 2, min(p.y(), base_y), bar_w, abs(base_y - p.y())))

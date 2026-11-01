@@ -9,6 +9,12 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Planned
 - Copernicus Data Space, Overture buildings, FAO WaPOR, CHIRPS, more SensorThings presets. See the roadmap in the README.
 
+## [4.7.0] - Field analytics
+
+### Added
+- **Fields tab** and `qgis_mcp_plugin/field_commands.py`: `analyse_fields` takes any polygon layer of fields, parcels or blocks (the selection, the features inside the area, or the first N, capped at 2000 so a million parcel layer stays usable), computes the vegetation index per field from the newest clear Sentinel-2 scene and from a scene about a month earlier with `QgsZonalStatistics`, derives change, acres, a status (bare or harvested, low vigour, declining, healthy, greening) and an attention rank, adds 30 day rain and ET0 and a 7 day forecast, and writes everything to a NEW layer styled by vigour; the source layer is never modified. `field_time_series` gives one field's history with a chart; `export_field_report` writes an HTML or PDF report with an acres by status chart and the ranked table. 121 MCP tools.
+- `tests/test_fields_headless.py` (24 offline checks with synthetic rasters).
+
 ## [4.6.0] - Source available licence
 
 ### Added

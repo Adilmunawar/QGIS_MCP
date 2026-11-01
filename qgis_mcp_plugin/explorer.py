@@ -42,6 +42,7 @@ from . import charts
 from .connectors import (basemaps, geocode, hazards, indices, osm, registry,
                          stac, weather)
 from .explorer_advanced import AdvancedTabsMixin
+from .explorer_fields import FieldTabsMixin
 from .explorer_overview import OverviewTabsMixin
 from .explorer_sensors import SensorTabsMixin
 from .explorer_toolbox import ToolboxTabsMixin
@@ -118,7 +119,7 @@ class ExplorerTask(QgsTask):
             self._on_error(f"{self.description()}: failed", "")
 
 
-class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
+class ExplorerDock(OverviewTabsMixin, FieldTabsMixin, SensorTabsMixin, AdvancedTabsMixin, ToolboxTabsMixin, QDockWidget):
     """The Data Explorer panel."""
 
     closed = pyqtSignal()
@@ -175,6 +176,7 @@ class ExplorerDock(OverviewTabsMixin, SensorTabsMixin, AdvancedTabsMixin, Toolbo
         self.tabs.addTab(self._build_sources_tab(), "Sources")
         self.tabs.addTab(self._build_log_tab(), "Log")
         self.tabs.insertTab(0, self._build_overview_tab(), "Overview")
+        self.tabs.insertTab(1, self._build_fields_tab(), "Fields")
         try:
             self.tabs.setCurrentIndex(int(self._settings.value("qgis_mcp/explorer_tab", 0)))
         except (TypeError, ValueError):

@@ -12,7 +12,7 @@
 [![QGIS](https://img.shields.io/badge/QGIS-3.22%20to%204.x-589632?logo=qgis&logoColor=white)](https://qgis.org/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6f42c1)](https://modelcontextprotocol.io/)
-[![Plugin 4.6.0](https://img.shields.io/badge/plugin-4.6.0-blue)](CHANGELOG.md)
+[![Plugin 4.7.0](https://img.shields.io/badge/plugin-4.7.0-blue)](CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/adilmunawar/qgis_mcp?style=social)](https://github.com/adilmunawar/qgis_mcp/stargazers)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](#contributing)
 [![Good first issues](https://img.shields.io/github/issues/adilmunawar/qgis_mcp/good%20first%20issue?label=good%20first%20issues)](https://github.com/adilmunawar/qgis_mcp/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -31,7 +31,7 @@ You do not need Claude, an API key or an MCP client to use this toolbox. The **D
   <img src="docs/images/explorer_8_analysis.png" width="31%" alt="Analysis tab: change detection, per polygon statistics, time lapse, report">
 </p>
 <p align="center">
-  <img src="docs/images/explorer_9_3d.png" width="31%" alt="3D tab: extrude buildings, set a DEM as terrain, stream lidar point clouds and 3D Tiles">
+  <img src="docs/images/explorer_1_fields.png" width="31%" alt="Fields tab: per field vigour, change and status with a ranked attention list">
   <img src="docs/images/explorer_10_sensors.png" width="31%" alt="Sensors tab: river gauges, buoys, tides, aircraft and SensorThings servers">
   <img src="docs/images/explorer_11_monitor.png" width="31%" alt="Monitor tab: feeds refreshed on a timer with threshold alerts">
 </p>
@@ -45,6 +45,7 @@ You do not need Claude, an API key or an MCP client to use this toolbox. The **D
 | Tab | What you can do with clicks |
 | --- | --- |
 | Overview | The front door: your map view is the area until you choose one, and nine one click buttons give a quick look card (weather now, seven day forecast, elevation, land cover shares, population, topsoil), the latest clear Sentinel-2 image, NDVI, the land cover map, a DEM, surface temperature, the population grid, the last 30 days of rain and a PDF report |
+| Fields | Pick any polygon layer of fields, parcels or blocks: the selection (or the fields inside the area) gets the vegetation index from the newest clear scene, the value a month earlier, the change, acres and a status (bare or harvested, low vigour, declining, healthy, greening), written to a new styled layer with a ranked list of fields needing attention and the last 30 days of rain and ET0; a six month time series with a chart for one field; a PDF field report |
 | Imagery | Search Sentinel-2, Landsat or Sentinel-1 scenes by date and cloud cover; stream true colour or chosen bands; compute NDVI, EVI, SAVI, NDWI, MNDWI, NDMI, NDBI, NBR, BSI or your own band expression with cloud masking; build a time series of any index |
 | Weather | Current conditions, a seven day forecast, air quality, daily history back to 1940, NASA POWER agro climatology; climate projections to 2050 from seven CMIP6 models; a seasonal outlook up to nine months; attach live weather fields to every feature of a layer |
 | Elevation | Copernicus DEM 30 m for the area; slope, aspect, hillshade, roughness, TRI and TPI; elevation profiles across the area or along a selected road or river, with a chart |
@@ -136,7 +137,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 
 **Data Explorer dashboard (no AI required)**
 - A dock panel inside QGIS: pick an area of interest by typing a place, drawing a rectangle on the map, using the current view, a layer's extent or its selected features.
-- Sixteen tabs: Overview, Imagery, Weather, Elevation, OpenStreetMap, Hazards, Land and Soil, Water, Boundaries and Species, Analysis, 3D, Sensors, Monitor, Basemaps, Sources and a Log; every fetch runs as a background task with a progress bar and Cancel, so QGIS never freezes.
+- Seventeen tabs: Overview, Fields, Imagery, Weather, Elevation, OpenStreetMap, Hazards, Land and Soil, Water, Boundaries and Species, Analysis, 3D, Sensors, Monitor, Basemaps, Sources and a Log; every fetch runs as a background task with a progress bar and Cancel, so QGIS never freezes.
 - Search Sentinel-2 or Landsat scenes, stream true colour or chosen bands, compute NDVI and other indices with one click, build index time series, add DEMs and derive hillshade or slope, fetch OSM presets such as hospitals, roads, buildings and farmland, pull weather for the area centre or attach it to every feature of a layer.
 - Open it from the QGIS MCP toolbar button menu or `Plugins > QGIS MCP > Data Explorer`.
 
@@ -153,6 +154,7 @@ What sets it apart from a plain "run any code" bridge is **safety**. Every comma
 - **3D**: building footprints extruded by height or storey tags, any DEM as terrain, USGS 3DEP lidar as streamed COPC point clouds, Cesium 3D Tiles (Google Photorealistic with a key or any tileset), 3D map views opened on request; elevation profiles with charts along any line.
 - **Sensor networks**: USGS river gauges, NOAA buoys and tide stations, OpenSky aircraft positions, and any OGC SensorThings server as a live layer through the native QGIS provider.
 - **Population**: WorldPop totals and age and sex pyramids for any area, cross checked against Meta's 30 m grid.
+- **Field analytics**: per field vigour, change and status for any polygon layer, a ranked attention list, time series per field and a PDF field report; the source layer is never modified.
 - **Live monitor**: earthquakes, air sensors, weather, GDACS alerts and NASA EONET events refreshed on a timer for an area, with threshold alerts in the message bar and the audit log.
 - **Water**: GloFAS river discharge forecast and history, sea state and sea surface temperature, elevation at any points.
 - **Boundaries, species and sensors**: geoBoundaries administrative units for every country, GBIF species observations by taxon, Sensor.Community and OpenAQ (free key) air quality stations, GDACS disaster alerts.
@@ -367,7 +369,7 @@ You have access to QGIS tools. Please:
 
 ## Tool reference
 
-The MCP server exposes **118 tools**. The **Risk** column is the category from [`permissions.py`](qgis_mcp_plugin/permissions.py); it decides what each [permission profile](#permission-profiles) does with the tool. `render_map_image` is a wrapper on the client side over the plugin command `render_map_base64` (read).
+The MCP server exposes **121 tools**. The **Risk** column is the category from [`permissions.py`](qgis_mcp_plugin/permissions.py); it decides what each [permission profile](#permission-profiles) does with the tool. `render_map_image` is a wrapper on the client side over the plugin command `render_map_base64` (read).
 
 
 #### Diagnostics and audit
@@ -590,6 +592,14 @@ Every live data tool takes an `aoi` that can be `{"place": "Multan"}`, `{"place"
 | `estimate_population` | People in the area from WorldPop and Meta's 30 m grid, with an optional age pyramid. | `read` |
 | `add_3d_tiles` | Cesium 3D Tiles scene: Google Photorealistic (key), the Cesium sample, or any tileset URL. | `write` |
 
+#### Toolbox: field analytics
+
+| Tool | Purpose | Risk |
+| --- | --- | --- |
+| `analyse_fields` | Per field index now, a month earlier, change, acres, status and attention rank as a new styled layer, with rain, ET0 and forecast. | `write` |
+| `field_time_series` | Index history of one field over recent months with a chart. | `read` |
+| `export_field_report` | Analyse the fields and write an HTML or PDF report with the ranked table. | `write` |
+
 
 > Commands missing from the permission table are treated as `destructive`, so new commands fail closed.
 
@@ -638,11 +648,17 @@ The headless tests run inside QGIS's own Python, with no GUI. On Windows with QG
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_explorer_headless.py
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_advanced_headless.py
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_sensors_headless.py
+"C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" tests\test_fields_headless.py
 ```
 
-The live data, toolbox, advanced, sensors and explorer suites import the plugin from the checkout and stub every HTTP call, so they need no network; add `--online` to the explorer suite for a real network scenario. The four older suites import the plugin from the QGIS 4 profile (`%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins`), so copy the plugin there first. Adjust the QGIS path for your install location. Together the suites run about 500 checks.
+The live data, toolbox, advanced, sensors and explorer suites import the plugin from the checkout and stub every HTTP call, so they need no network; add `--online` to the explorer suite for a real network scenario. The four older suites import the plugin from the QGIS 4 profile (`%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins`), so copy the plugin there first. Adjust the QGIS path for your install location. Together the suites run about 560 checks.
 
 ## Roadmap
+
+Shipped in 4.7.0:
+
+- [x] **Field analytics**: vigour, change and status per field for any polygon layer, time series per field, PDF field report
+- [x] **Overview tab** with one click buttons; the area follows the map view; charts, elapsed timer, readable errors
 
 Shipped in 4.4.0:
 

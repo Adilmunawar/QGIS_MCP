@@ -113,6 +113,7 @@ COMMAND_CATEGORIES = {
     "list_sensorthings_servers": READ,
     "discover_sensorthings": READ,
     "estimate_population": READ,
+    "field_time_series": READ,
     # write - changes the session or the view, reversible in practice
     "add_vector_layer": WRITE,
     "add_raster_layer": WRITE,
@@ -173,6 +174,8 @@ COMMAND_CATEGORIES = {
     "fetch_aircraft": WRITE,
     "add_sensorthings_layer": WRITE,
     "add_3d_tiles": WRITE,
+    "analyse_fields": WRITE,
+    "export_field_report": WRITE,
     # destructive - discards data, or overwrites something on disk
     "open_3d_view": DESTRUCTIVE,  # can crash QGIS without a real GPU
     "delete_features": DESTRUCTIVE,

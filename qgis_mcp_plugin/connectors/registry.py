@@ -83,7 +83,8 @@ source("earth-search", "Element84 Earth Search (AWS Open Data)", IMAGERY,
                    "Collection 2 and Copernicus DEM, served as cloud-optimised "
                    "GeoTIFFs that stream straight into QGIS.",
        commands=["search_imagery", "add_imagery", "add_dem",
-                 "compute_spectral_index", "get_index_time_series"],
+                 "compute_spectral_index", "get_index_time_series",
+                 "analyse_fields", "field_time_series", "export_field_report"],
        docs="https://earth-search.aws.element84.com/v1",
        attribution="Contains modified Copernicus Sentinel data")
 

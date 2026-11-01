@@ -1853,6 +1853,70 @@ def add_3d_tiles(ctx: Context, url: Optional[str] = None, preset: Optional[str] 
 
 
 # ---------------------------------------------------------------------
+# field analytics
+# ---------------------------------------------------------------------
+@mcp.tool()
+@with_aoi_doc
+def analyse_fields(ctx: Context, layer_id: str, index: str = "NDVI", selected: Optional[bool] = None,
+                   aoi: Optional[dict] = None, limit: int = 300, days: int = 45, compare_days: int = 30,
+                   collection: str = "sentinel-2-l2a", max_cloud: int = 25,
+                   name: Optional[str] = None, style: bool = True) -> str:
+    """Per field analytics for a polygon layer of fields, parcels or blocks:
+    mean index now from the newest clear Sentinel-2 scene within `days`, the
+    value about `compare_days` earlier, the change, acres, a status (bare or
+    harvested, low vigour, declining, healthy, greening) and an attention
+    rank, plus 30 day rain and ET0 and a 7 day forecast. Analyses the
+    selection when there is one, else the features inside aoi, else the first
+    `limit` (max 2000). Writes a NEW styled layer; the source is untouched.
+    Takes one to three minutes.
+    """
+    params: Dict[str, Any] = {"layer_id": layer_id, "index": index, "limit": limit, "days": days,
+                              "compare_days": compare_days, "collection": collection,
+                              "max_cloud": max_cloud, "style": style}
+    if selected is not None:
+        params["selected"] = selected
+    if aoi:
+        params["aoi"] = aoi
+    if name:
+        params["name"] = name
+    return _call("analyse_fields", params)
+
+
+@mcp.tool()
+def field_time_series(ctx: Context, layer_id: str, feature_id: Optional[int] = None,
+                      index: str = "NDVI", months: int = 6, max_scenes: int = 10,
+                      max_cloud: int = 30, collection: str = "sentinel-2-l2a") -> str:
+    """Index history of one field: the selected feature, or feature_id, over the
+    last `months`, one value per clear scene, with the change first to last and
+    a chart image path.
+    """
+    params: Dict[str, Any] = {"layer_id": layer_id, "index": index, "months": months,
+                              "max_scenes": max_scenes, "max_cloud": max_cloud, "collection": collection}
+    if feature_id is not None:
+        params["feature_id"] = feature_id
+    return _call("field_time_series", params)
+
+
+@mcp.tool()
+@with_aoi_doc
+def export_field_report(ctx: Context, layer_id: str, path: Optional[str] = None, index: str = "NDVI",
+                        selected: Optional[bool] = None, aoi: Optional[dict] = None, limit: int = 300,
+                        days: int = 45, compare_days: int = 30, title: Optional[str] = None) -> str:
+    """Run analyse_fields and write an HTML or PDF report (path ending .html or
+    .pdf): summary, acres by status chart, weather, the fields needing
+    attention and the full table.
+    """
+    params: Dict[str, Any] = {"layer_id": layer_id, "index": index, "limit": limit, "days": days,
+                              "compare_days": compare_days}
+    for key, value in (("path", path), ("aoi", aoi), ("title", title)):
+        if value:
+            params[key] = value
+    if selected is not None:
+        params["selected"] = selected
+    return _call("export_field_report", params)
+
+
+# ---------------------------------------------------------------------
 # entrypoint - keep last: mcp.run() blocks, so any @mcp.tool() defined
 # below this point would never be registered when run as a script.
 # ---------------------------------------------------------------------

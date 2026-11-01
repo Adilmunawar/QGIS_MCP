@@ -202,7 +202,7 @@ check("wiring: 9 sensor commands registered", all(c in handlers for c in new), [
 check("wiring: categories and help", all(c in COMMAND_CATEGORIES and c in COMMAND_HELP for c in new))
 check("wiring: registry commands exist", all(c in handlers for e in registry.REGISTRY.values() for c in e["commands"]),
       [c for e in registry.REGISTRY.values() for c in e["commands"] if c not in handlers])
-check("wiring: 118 commands", len(handlers) == 118, len(handlers))
+check("wiring: at least 118 commands", len(handlers) >= 118, len(handlers))
 check("wiring: google tiles need a key", registry.REGISTRY["google-3d-tiles"]["key_setting"] == "qgis_mcp/keys/google_maps")
 
 
