@@ -9,6 +9,11 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Planned
 - Copernicus Data Space, Overture buildings, FAO WaPOR, CHIRPS, more SensorThings presets. See the roadmap in the README.
 
+## [4.7.2] - Attention count
+
+### Fixed
+- Field analytics reported the length of the 25 row list as the number of fields needing attention. The dashboard, log and report now give the full total and say when only the worst are listed.
+
 ## [4.7.1] - Sentinel-2 reflectance fix
 
 ### Fixed

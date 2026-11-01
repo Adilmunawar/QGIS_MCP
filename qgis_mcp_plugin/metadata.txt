@@ -1,7 +1,7 @@
 [general]
 name=QGIS MCP Bridge
 description=Open data toolbox for QGIS: a Data Explorer with 17 tabs for live satellite imagery, 20 global rasters, weather and climate, elevation and 3D, OpenStreetMap, hazards, sensor networks, population and a live monitor, plus a permission gated MCP bridge so Claude and other AI agents can drive QGIS
-version=4.7.1
+version=4.7.2
 qgisMinimumVersion=3.22
 qgisMaximumVersion=4.99
 supportsQt6=True
@@ -16,7 +16,8 @@ repository=https://github.com/adilmunawar/qgis_mcp
 experimental=False
 license=Source available (QGIS MCP Toolbox Source Available License 1.0): personal, study and evaluation use free; other use and any redistribution need written permission. See LICENSE.
 hasProcessingProvider=no
-changelog=4.7.1 - Important fix: Sentinel-2 indices from sentinel-2-l2a were inflated because the reflectance offset was applied twice. Recompute any index, change, zonal or field result made with an earlier version.
+changelog=4.7.2 - Field analytics reports the full number of fields needing attention.
+ 4.7.1 - Important fix: Sentinel-2 indices from sentinel-2-l2a were inflated because the reflectance offset was applied twice. Recompute any index, change, zonal or field result made with an earlier version.
  4.7.0 - Field analytics: per field vigour, change and status for any polygon layer, time series per field, PDF field report; Fields tab; 121 MCP tools.
  4.6.0 - Licence: QGIS MCP Toolbox Source Available License 1.0 (permission required for organisational use and redistribution). Not for the official QGIS plugin repository.
  4.5.0 - Licence and attribution release: GPL-3.0-or-later, NOTICE, visible credit, Overview tab with one click buttons, Data Explorer toolbar button.

@@ -305,7 +305,7 @@ class FieldsMixin:
             "now": {k: v for k, v in fetched["now"].items() if k != "path"},
             "previous": ({k: v for k, v in fetched["prev"].items() if k != "path"} if fetched.get("prev") else None),
             "mean_now": mean_now, "mean_change": mean_change, "by_status": by_status,
-            "attention": attention[:25], "rows": rows,
+            "attention": attention[:25], "attention_count": len(attention), "rows": rows,
             "weather": {k: {kk: vv for kk, vv in v.items() if kk != "rows"} for k, v in fetched["weather"].items()},
             "errors": fetched["errors"],
             "thresholds": {"bare_below": bare, "low_below": low, "decline_below": drop},
@@ -420,7 +420,9 @@ class FieldsMixin:
             f = wx["forecast"]
             parts.append(f"<p>Next 7 days: rain {f.get('rain_mm')} mm, hottest day {f.get('tmax_max')} °C.</p>")
         cols = ["label", "acres", f"{key}_now", f"{key}_prev", "change", "status"]
-        parts.append("<h2>Fields needing attention</h2>" + (table(result["attention"], cols) if result["attention"]
+        parts.append(f"<h2>Fields needing attention: {result['attention_count']}"
+                     + (f" (worst {len(result['attention'])} listed)" if result["attention_count"] > len(result["attention"]) else "")
+                     + "</h2>" + (table(result["attention"], cols) if result["attention"]
                                                            else "<p>None: every field with data is healthy or greening.</p>"))
         parts.append("<h2>All fields</h2>" + table(result["rows"], cols))
         parts.append(f"<p class='small'>{esc(result['interpretation'])}</p>")
@@ -432,4 +434,4 @@ class FieldsMixin:
         if ext == ".pdf":
             report_to_pdf(html_path, path)
         return {"path": path, "html_path": html_path, "layer_id": result["layer_id"], "fields": result["fields"],
-                "attention": len(result["attention"]), "mean_now": result["mean_now"]}
+                "attention": result["attention_count"], "mean_now": result["mean_now"]}

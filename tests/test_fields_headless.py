@@ -129,6 +129,8 @@ check("apply: statuses from vigour and change", status["Jalal Abad / 1"] == "gre
       and status["Jalal Abad / 3"] == "bare or harvested" and status["Jalal Abad / 4"] == "healthy"
       and status["Jalal Abad / 5"].startswith("no data"), status)
 check("apply: attention ranked bare first", [r["label"] for r in result["attention"]][:2] == ["Jalal Abad / 3", "Jalal Abad / 2"], result["attention"])
+check("apply: attention count is the full total, not the listed length", result["attention_count"] == 2
+      and result["attention_count"] == sum(1 for r in result["rows"] if r["attention"] > 0), result["attention_count"])
 check("apply: change computed", abs(result["rows"][1]["change"] - (-0.2)) < 0.02, result["rows"][1])
 check("apply: by status acres", abs(result["by_status"]["declining"]["acres"] - 9.88) < 0.1 and result["by_status"]["declining"]["fields"] == 1, result["by_status"])
 out_layer = QgsProject.instance().mapLayer(result["layer_id"])

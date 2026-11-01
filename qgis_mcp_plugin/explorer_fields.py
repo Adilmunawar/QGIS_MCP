@@ -123,7 +123,10 @@ class FieldTabsMixin:
             parts.append(f"<p>Last {h.get('days')} days: rain {h.get('rain_mm')} mm, ET0 {h.get('et0_mm')} mm, "
                          f"mean daily maximum {h.get('tmax_mean')} °C"
                          + (f"; next 7 days rain {wx['forecast'].get('rain_mm')} mm" if wx.get("forecast") else "") + "</p>")
-        parts.append("<h4>Needing attention</h4>" + (_table(result["attention"], cols) if result["attention"]
+        parts.append(f"<h4>Needing attention: {result['attention_count']}"
+                     + (f" (worst {len(result['attention'])} listed; all are in the layer)"
+                        if result["attention_count"] > len(result["attention"]) else "")
+                     + "</h4>" + (_table(result["attention"], cols) if result["attention"]
                                                      else "<p>None: every field with data is healthy or greening.</p>"))
         if result.get("errors"):
             parts.append(f"<p><small>Not available: {esc(str(result['errors']))}</small></p>")
@@ -147,7 +150,7 @@ class FieldTabsMixin:
             result = commands.fields_apply(fetched)
             self._last_fields_result = result
             self._render_fields_result(result)
-            self.log(f"{result['fields']} fields analysed: {len(result['attention'])} need attention", "success")
+            self.log(f"{result['fields']} fields analysed: {result['attention_count']} need attention", "success")
 
         self._run(f"Analysing {len(subset['fields'])} fields", work, apply)
 
