@@ -217,6 +217,14 @@ check("stac: s3 href becomes https vsicurl",
       == "/vsicurl/https://copernicus-dem-30m.s3.amazonaws.com/a/b.tif")
 check("stac: scale/offset read from raster:bands",
       stac.asset_scale_offset(STAC_ITEM["assets"]["red"]) == (0.0001, -0.1, 0))
+check("stac: declared offset kept when the pixels still carry it",
+      stac.item_scale_offset({"properties": {}}, STAC_ITEM["assets"]["red"]) == (0.0001, -0.1, 0))
+check("stac: offset not applied twice on harmonised Earth Search scenes",
+      stac.item_scale_offset({"properties": {"earthsearch:boa_offset_applied": True}},
+                             STAC_ITEM["assets"]["red"]) == (0.0001, 0.0, 0))
+check("stac: offset kept when the flag is false",
+      stac.item_scale_offset({"properties": {"earthsearch:boa_offset_applied": False}},
+                             STAC_ITEM["assets"]["red"]) == (0.0001, -0.1, 0))
 
 # ---------------------------------------------------------------------
 # indices (pure maths, no COG reads)

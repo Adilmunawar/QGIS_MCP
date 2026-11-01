@@ -12,7 +12,7 @@
 [![QGIS](https://img.shields.io/badge/QGIS-3.22%20to%204.x-589632?logo=qgis&logoColor=white)](https://qgis.org/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6f42c1)](https://modelcontextprotocol.io/)
-[![Plugin 4.7.0](https://img.shields.io/badge/plugin-4.7.0-blue)](CHANGELOG.md)
+[![Plugin 4.7.1](https://img.shields.io/badge/plugin-4.7.1-blue)](CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/adilmunawar/qgis_mcp?style=social)](https://github.com/adilmunawar/qgis_mcp/stargazers)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](#contributing)
 [![Good first issues](https://img.shields.io/github/issues/adilmunawar/qgis_mcp/good%20first%20issue?label=good%20first%20issues)](https://github.com/adilmunawar/qgis_mcp/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)

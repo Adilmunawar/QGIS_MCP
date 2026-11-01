@@ -301,6 +301,22 @@ def gdal_path(href):
     raise ValueError(f"Unsupported asset location: {href[:100]}")
 
 
+def item_scale_offset(item, asset):
+    """Scale, offset and nodata that really apply to an asset's pixels.
+
+    Earth Search's ``sentinel-2-l2a`` declares an offset of -0.1 on every band
+    even though its pixels have already been harmonised, which it records in
+    ``earthsearch:boa_offset_applied``. Applying the declared offset again
+    pushes dark reflectance to zero and saturates NDVI at 1.
+    ``sentinel-2-c1-l2a`` has no such flag and does need the offset: the same
+    scene reads exactly 1000 higher there.
+    """
+    scale, offset, nodata = asset_scale_offset(asset)
+    if (item.get("properties") or {}).get("earthsearch:boa_offset_applied"):
+        offset = 0.0
+    return scale, offset, nodata
+
+
 def asset_scale_offset(asset, default_scale=1.0, default_offset=0.0):
     bands = asset.get("raster:bands") or []
     if bands:

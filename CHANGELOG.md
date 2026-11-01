@@ -9,6 +9,12 @@ is the one declared in `qgis_mcp_plugin/metadata.txt`.
 ### Planned
 - Copernicus Data Space, Overture buildings, FAO WaPOR, CHIRPS, more SensorThings presets. See the roadmap in the README.
 
+## [4.7.1] - Sentinel-2 reflectance fix
+
+### Fixed
+- **Sentinel-2 indices were wrong in every earlier version.** Earth Search's `sentinel-2-l2a` declares an offset of -0.1 on pixels that are already harmonised (`earthsearch:boa_offset_applied`), and the offset was applied a second time. Dark reflectance fell to zero, which inflated NDVI and saturated many pixels at 1 (on a test scene the mean read 0.852 instead of 0.586, with 74% of pixels at 1.0). All index results, time series, change detection, zonal statistics, field analytics and area reports built on this collection are affected and should be recomputed. `sentinel-2-c1-l2a` and Landsat were not affected. An earlier clip at zero had hidden the symptom.
+- Field analytics counts identical polygons once and labels fields by mouza name and parcel number.
+
 ## [4.7.0] - Field analytics
 
 ### Added

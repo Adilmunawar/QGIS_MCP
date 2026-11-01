@@ -62,7 +62,7 @@ check("subset: selection required when asked", r["status"] == "error" and "selec
 subset = server.fields_subset(layer.id(), None, None, 300)
 check("subset: first features, WGS84 wkt, acres, labels", subset["how"] == "first" and len(subset["fields"]) == 5
       and subset["fields"][0]["wkt"].startswith("Polygon") and 9.5 < subset["fields"][0]["acres"] < 10.3
-      and subset["fields"][0]["label"] == "1 / Jalal Abad" and subset["name_fields"] == ["parcel_no", "mouza_name"], subset["fields"][0])
+      and subset["fields"][0]["label"] == "Jalal Abad / 1" and subset["name_fields"] == ["mouza_name", "parcel_no"], subset["fields"][0])
 subset_cap = server.fields_subset(layer.id(), None, None, 2)
 check("subset: cap and truncation reported", len(subset_cap["fields"]) == 2 and subset_cap["truncated"] and subset_cap["candidates"] == 5)
 layer.selectByIds([2, 3])
@@ -77,6 +77,18 @@ line = QgsVectorLayer("LineString?crs=EPSG:4326", "line", "memory")
 QgsProject.instance().addMapLayer(line)
 r = server.execute_command({"type": "analyse_fields", "params": {"layer_id": line.id()}})
 check("subset: line layer refused", r["status"] == "error" and "polygon" in r["message"])
+
+twin = QgsVectorLayer("Polygon?crs=EPSG:4326&field=parcel_no:integer", "twins", "memory")
+for number in (1, 2, 3):
+    f = QgsFeature(twin.fields())
+    x = 71.5 if number < 3 else 71.51
+    f.setGeometry(QgsGeometry.fromWkt(f"POLYGON(({x} 30.2,{x + 0.001} 30.2,{x + 0.001} 30.201,{x} 30.201,{x} 30.2))"))
+    f.setAttributes([number])
+    twin.dataProvider().addFeatures([f])
+QgsProject.instance().addMapLayer(twin)
+twins = server.fields_subset(twin.id())
+check("subset: identical polygons counted once", len(twins["fields"]) == 2 and twins["duplicates_skipped"] == 1
+      and not twins["truncated"], (len(twins["fields"]), twins["duplicates_skipped"], twins["truncated"]))
 
 # synthetic index rasters over the subset bbox -----------------------------------------------
 tmp = tempfile.mkdtemp()
@@ -113,10 +125,10 @@ fetched = {"subset": subset, "index": "NDVI",
            "errors": {}}
 result = server.fields_apply(fetched)
 status = {r["label"]: r["status"] for r in result["rows"]}
-check("apply: statuses from vigour and change", status["1 / Jalal Abad"] == "greening" and status["2 / Jalal Abad"] == "declining"
-      and status["3 / Jalal Abad"] == "bare or harvested" and status["4 / Jalal Abad"] == "healthy"
-      and status["5 / Jalal Abad"].startswith("no data"), status)
-check("apply: attention ranked bare first", [r["label"] for r in result["attention"]][:2] == ["3 / Jalal Abad", "2 / Jalal Abad"], result["attention"])
+check("apply: statuses from vigour and change", status["Jalal Abad / 1"] == "greening" and status["Jalal Abad / 2"] == "declining"
+      and status["Jalal Abad / 3"] == "bare or harvested" and status["Jalal Abad / 4"] == "healthy"
+      and status["Jalal Abad / 5"].startswith("no data"), status)
+check("apply: attention ranked bare first", [r["label"] for r in result["attention"]][:2] == ["Jalal Abad / 3", "Jalal Abad / 2"], result["attention"])
 check("apply: change computed", abs(result["rows"][1]["change"] - (-0.2)) < 0.02, result["rows"][1])
 check("apply: by status acres", abs(result["by_status"]["declining"]["acres"] - 9.88) < 0.1 and result["by_status"]["declining"]["fields"] == 1, result["by_status"])
 out_layer = QgsProject.instance().mapLayer(result["layer_id"])

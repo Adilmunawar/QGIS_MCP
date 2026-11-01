@@ -243,7 +243,7 @@ def compute(item, bbox, index=None, expression=None, mask_clouds=True,
     for logical in needed:
         href, asset = stac.asset_href(item, band_map.get(logical, logical),
                                       catalogue)
-        scale, offset, nodata_declared = stac.asset_scale_offset(asset)
+        scale, offset, nodata_declared = stac.item_scale_offset(item, asset)
         raw, transform, srs, nodata, used_resolution = read_window(
             href, bbox, target, src_nodata=nodata_declared)
         data = raw.astype("float32")

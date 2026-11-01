@@ -114,7 +114,9 @@ class FieldTabsMixin:
                  + (f" vs {esc((result['previous']['datetime'] or '')[:10])}" if result.get("previous") else "") + "</h3>",
                  f"<p>Mean {esc(result['index'])} <b>{result['mean_now']}</b>"
                  + (f", mean change <b>{result['mean_change']:+.3f}</b>" if result.get("mean_change") is not None else "")
-                 + f". Layer <b>{esc(result['layer_name'])}</b> added, styled by vigour.</p>",
+                 + f". Layer <b>{esc(result['layer_name'])}</b> added, styled by vigour."
+                 + (f" {result['duplicates_skipped']} duplicate polygons were skipped."
+                    if result.get("duplicates_skipped") else "") + "</p>",
                  _table([dict(status=k, **v) for k, v in result["by_status"].items()], ["status", "fields", "acres"])]
         if wx.get("history"):
             h = wx["history"]

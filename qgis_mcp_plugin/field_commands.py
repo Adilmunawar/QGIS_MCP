@@ -32,8 +32,8 @@ from .live_commands import _output_tif, _safe_name, cache_dir, persist_layer
 
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
 MAX_FIELDS = 2000
-NAME_CANDIDATES = ("name", "Name", "NAME", "field", "field_name", "block", "parcel_no",
-                   "parcel_id", "parcel_Id", "mouza_name", "id", "fid")
+NAME_CANDIDATES = ("name", "Name", "NAME", "field", "field_name", "block", "mouza_name",
+                   "parcel_no", "parcel_id", "parcel_Id", "id", "fid")
 SQ_M_PER_ACRE = 4046.8564224
 
 
@@ -89,6 +89,8 @@ class FieldsMixin:
             how = "first"
         rows = []
         total_seen = 0
+        seen_geometry = set()
+        duplicates = 0
         for feature in layer.getFeatures(request):
             if not feature.hasGeometry():
                 continue
@@ -100,8 +102,13 @@ class FieldsMixin:
                 geom.transform(transform)
             if area is not None and not geom.intersects(QgsGeometry.fromRect(QgsRectangle(*area.bbox))):
                 continue
+            wkt = geom.asWkt(7)
+            if wkt in seen_geometry:  # the same polygon twice would double count its acres
+                duplicates += 1
+                continue
+            seen_geometry.add(wkt)
             attrs = dict(zip([f.name() for f in layer.fields()], feature.attributes()))
-            rows.append({"fid": feature.id(), "wkt": geom.asWkt(7),
+            rows.append({"fid": feature.id(), "wkt": wkt,
                          "label": _label(attrs, name_fields),
                          "acres": round(measure.measureArea(geom) / SQ_M_PER_ACRE, 3),
                          "attrs": {k: v for k, v in attrs.items()
@@ -114,8 +121,8 @@ class FieldsMixin:
         ymax = max(QgsGeometry.fromWkt(r["wkt"]).boundingBox().yMaximum() for r in rows)
         bbox = aoi_mod.from_bbox([xmin, ymin, xmax, ymax], source="fields", label=layer.name()).bbox
         return {"layer_id": layer_id, "layer_name": layer.name(), "how": how, "limit": limit,
-                "truncated": total_seen > len(rows), "candidates": total_seen,
-                "fields": rows, "bbox": bbox, "name_fields": name_fields,
+                "truncated": total_seen > len(rows) + duplicates, "candidates": total_seen,
+                "duplicates_skipped": duplicates, "fields": rows, "bbox": bbox, "name_fields": name_fields,
                 "total_acres": round(sum(r["acres"] for r in rows), 2)}
 
     # ------------------------------------------------------------------
@@ -294,6 +301,7 @@ class FieldsMixin:
             "layer_id": layer.id(), "layer_name": layer.name(), "index": label,
             "fields": len(rows), "acres": subset["total_acres"], "how": subset["how"],
             "truncated": subset["truncated"], "candidates": subset["candidates"],
+            "duplicates_skipped": subset.get("duplicates_skipped", 0),
             "now": {k: v for k, v in fetched["now"].items() if k != "path"},
             "previous": ({k: v for k, v in fetched["prev"].items() if k != "path"} if fetched.get("prev") else None),
             "mean_now": mean_now, "mean_change": mean_change, "by_status": by_status,

@@ -27,7 +27,7 @@ from .permissions import APPROVE, DENY, PermissionManager, category_for
 
 LOG_TAG = "QGIS MCP"
 PROTOCOL_VERSION = 3
-PLUGIN_VERSION = "4.7.0"
+PLUGIN_VERSION = "4.7.1"
 PROJECT_NAME = "QGIS MCP toolbox"
 PROJECT_AUTHOR = "Adil Munawar"
 PROJECT_URL = "https://github.com/Adilmunawar/QGIS_MCP"
