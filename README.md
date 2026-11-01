@@ -26,14 +26,14 @@
 You do not need Claude, an API key or an MCP client to use this toolbox. The **Data Explorer** is a dock panel inside QGIS. Pick an area, click a button, and the data arrives as a layer in your project.
 
 <p align="center">
-  <img src="docs/images/explorer_0_imagery.png" width="31%" alt="Imagery tab: search Sentinel-2 scenes, add bands, compute NDVI">
-  <img src="docs/images/explorer_5_land_and_soil.png" width="31%" alt="Land and Soil tab: WorldCover, land use, surface water, SoilGrids">
-  <img src="docs/images/explorer_8_analysis.png" width="31%" alt="Analysis tab: change detection, per polygon statistics, time lapse, report">
+  <img src="docs/images/explorer_0_overview.png" width="31%" alt="Overview tab: one click buttons for the current map view">
+  <img src="docs/images/explorer_7_land_and_soil.png" width="31%" alt="Land and Soil tab: WorldCover, land use, surface water, SoilGrids">
+  <img src="docs/images/explorer_10_analysis.png" width="31%" alt="Analysis tab: change detection, per polygon statistics, time lapse, report">
 </p>
 <p align="center">
   <img src="docs/images/explorer_1_fields.png" width="31%" alt="Fields tab: per field vigour, change and status with a ranked attention list">
-  <img src="docs/images/explorer_10_sensors.png" width="31%" alt="Sensors tab: river gauges, buoys, tides, aircraft and SensorThings servers">
-  <img src="docs/images/explorer_11_monitor.png" width="31%" alt="Monitor tab: feeds refreshed on a timer with threshold alerts">
+  <img src="docs/images/explorer_12_sensors.png" width="31%" alt="Sensors tab: river gauges, buoys, tides, aircraft and SensorThings servers">
+  <img src="docs/images/explorer_13_monitor.png" width="31%" alt="Monitor tab: feeds refreshed on a timer with threshold alerts">
 </p>
 
 **Open it**: the **Data Explorer** toolbar button (globe icon), `Plugins > QGIS MCP > Data Explorer`, or the `Open Data Explorer` button at the top of the QGIS MCP server panel. It also opens by itself the first time QGIS starts after an install or upgrade.
